@@ -1,0 +1,241 @@
+{% import 'macros/form.html' as form %}
+
+
+{% set data = data or {} %}
+{% set errors = errors or {} %}
+{#{% set action = form_action or h.url_for(controller='ckanext.harmonisation.controllers.package:CustomHarmonisationController',
+    action='read_data_', id=pkg_name) %}
+    #}
+{% set action = h.url_for(controller='ckanext.harmonisation.controllers.package:CustomHarmonisationController',
+action='main_dashboard') %}
+
+<form class="dataset-form dataset-resource-form form-horizontal" method="post" action="{{ action }}" data-module="basic-form resource-form">
+
+
+	{% block primary_content %}
+	  <article class="module prose">
+		{% block page_header %}
+		  <header class="module-content page-header">
+			{# CKAN 2.1+ #}
+			{% if authorized_user%}
+			  {% block content_action %}
+				<div class="content_action">
+				  {{ self.admin_link() }}
+				</div>
+			  {% endblock %}
+			{% endif %}
+			<ul class="nav nav-tabs">
+			  {% block page_header_tabs %}
+				{{ h.build_nav_icon('main_dashboard', _('Dashboard'), icon='dashboard') }}
+				{{ h.build_nav_icon('view_rules', _('View/Add Rules'),  icon='eye-open') }}
+				{{ h.build_nav_icon('edit_rules', _('Edit Rules'), icon='edit') }}
+			  {% endblock %}
+			</ul>
+			
+		  </header>
+	{% endblock %}
+    <br></br>
+    
+    {% block primary_content_inner %}
+    
+	  {% block block1 %}
+	  {% call form.select('catalogue_selection', id='catalogue_selection', label=_('Catalogue'), options=h.harmonisation_sources_list(), selected=data.catalogue_selection, error=errors.catalogue_selection) %} 
+	  
+	  {% endcall %}
+       
+      
+       
+	 {# {{ form.input('category', id='field-last-modified', label=_('Category'), value=data.category,error=errors.category, classes=[]) }} #}
+	 
+	{# {% call form.select('category_selection', id='category_selection', label=_('Category'), options=[{ "value": "dates", "text": "Dates" },{ "value": "resources", "text": "Resources" },
+	 { "value": "licenses", "text": "Licenses" },{ "value": "languages", "text": "Languages" },{ "value": "categories", "text": "Categories" },
+            {'value':'countries', 'text':'Countries'}], selected=data.category_selection, error=errors.catalogue_selection) %} 
+  
+	{% endcall %}#}
+	
+<button class="btn" name="info" value="get-catalogue-info" type="submit" >{{ _('View Info') }}</button>
+
+
+	  {% endblock %}
+	  
+	  
+	<br></br>  
+	  
+	  
+	  
+<br></br>
+
+
+
+
+
+
+	  <h3 class="hide-heading">{{ _('Details') }}</h3>
+  <table class="table table-striped table-bordered table-condensed">
+	<colgroup>
+	  <col width="30">
+	  <col width="70">
+	</colgroup>
+	<tr>
+	  <th>{{ _('Id:') }}</th>
+	  <td><b>{{data.id}}</b></td>
+	</tr>
+	<tr>
+	  <th>{{ _('Catalogue Url:') }}</th>
+	  <td><b>{{data.cat_url}}</b></td>
+	</tr>
+	<tr>
+	  <th>{{ _('Harmonisation:') }}</th>
+	 <td><b>{{data.harmonised}}</b></td>
+	</tr>
+	{%if data.harmonised=='started' or data.harmonised=='finished' %}
+	<tr>
+	  <th>{{ _('Harmonised basic fields:') }}</th>
+	  <td><b>{{data.harmonised_basic}} {{" - "}}{{data.harmonised_basic_date}}</b>
+	  <ul>
+	  <li>{{data.message_Copy_Odm_to_Odm_harmonised}}</li><li>{{data.message_HarmoniseTags}}</li>
+	  <li>{{data.message_HarmoniseExtras}}</li><li>{{data.message_HarmoniseStringsToIntegers}}</li></td>
+	  </ul>
+	</tr>
+	<tr>
+	  <th>{{ _('Harmonised dates:') }}</th>
+	  <td><b>{{data.harmonised_dates}} {{" - "}}{{data.harmonised_dates_date}}</b>
+	  <ul>
+		<li>{{data.message_HarmoniseDatesLabels}}</li><li>{{data.message_HarmoniseReleaseDates}}</li>
+		<li>{{data.message_HarmoniseUpdateDates}}</li><li>{{data.message_HarmoniseMetadataCreated}}</li><li>{{data.message_HarmoniseMetadataModified}}</li></td>
+	  </ul>
+	</tr>
+	<tr>
+	  <th>{{ _('Harmonised resources:') }}</th>
+	  <td><b>{{data.harmonised_resources}} {{" - "}}{{data.harmonised_resources_date}}</b>
+	  <ul>
+		<li>{{data.message_HarmoniseFormats}}</li><li>{{data.message_HarmoniseBadFormats}}</li>
+		<li>{{data.message_HarmoniseSizes}}</li><li>{{data.message_HarmoniseMimetypes}}</li><li>{{data.message_HarmoniseNumTagsAndResources}}</li></td>
+	  </ul>
+	</tr>
+	<tr>
+	  <th>{{ _('Harmonised licenses:') }}</th>
+	  <td><b>{{data.harmonised_licenses}} {{" - "}}{{data.harmonised_licenses_date}}</b>
+	  <ul>
+		<li>{{data.message_HarmoniseLicenses}} </li></td>
+	  </ul>
+	</tr>
+	<tr>
+	  <th>{{ _('Harmonised languages:') }}</th>
+	
+	  <td><b>{{data.harmonised_languages}} {{" - "}}{{data.harmonised_languages_date}}</b>
+	  <ul>
+	    <li>{{data.message_HarmoniseLanguageLabels}}</li><li>{{data.message_HarmoniseLanguages}}</li></td>
+	  </ul>
+	</tr>
+	<tr>
+	  <th>{{ _('Harmonised categories:') }}</th>
+	  
+	  <td><b>{{data.harmonised_categories}} {{" - "}}{{data.harmonised_categories_date}}</b>
+	  <ul>
+		<li>{{data.message_HarmoniseCategoryLabels}}</li><li>{{data.message_HarmoniseCategories}}</li></td>
+	  </ul>
+	</tr>
+	
+	<tr>
+	  <th>{{ _('Harmonised countries:') }}</th>
+	  <td><b>{{data.harmonised_countries}} {{" - "}}{{data.harmonised_countries_date}}</b></td>
+	</tr>
+	{%endif%}
+	<tr>
+	  <th>{{ _('Harmonisation Status:') }}</th>
+	  <td><b>{{data.status}}</b></td>
+	</tr>
+  </table>
+    
+    <br></br>
+    <b><u>Select Harmonisation Categories</u></b>
+    <br></br>
+    	  <table>
+        <tr>
+           
+            <th>ID</th>
+            <th> Harmonise</th>
+            <th></th>
+        </tr>
+       {# {% for page in pages %} #}
+            <tr>
+                
+                <td>1</td>
+                <td>Dates</td>
+                <td><input type=checkbox name=dates value="dates_selected"></td>
+            </tr>
+            
+             <tr>
+                
+                <td>2</td>
+                <td>Resources</td>
+                <td><input type=checkbox name=resources value="resources_selected"></td>
+            </tr>
+            
+            <tr>
+                
+                <td>3</td>
+                <td>Licenses</td>
+                <td><input type=checkbox name=licenses value="licenses_selected"></td>
+            </tr>
+            
+             <tr>
+                
+                <td>4</td>
+                <td>Languages</td>
+                <td><input type=checkbox name=languages value="languages_selected"></td>
+            </tr>
+            
+             <tr>
+                
+                <td>5</td>
+                <td>Categories</td>
+                <td><input type=checkbox name=categories value="categories_selected"></td>
+            </tr>
+            
+            
+             <tr>
+                
+                <td>6</td>
+                <td>Countries</td>
+                <td><input type=checkbox name=countries value="countries_selected"></td>
+            </tr>
+       {# {% endfor %} #}
+    </table>
+    
+    
+    {% endblock %}
+  </article>
+{% endblock %}
+
+
+
+
+  {% block stages %}
+    {# An empty stages variable will not show the stages #}
+    {% if stage %}
+      {{ h.snippet('package/snippets/stages.html', stages=stage, pkg_name=pkg_name) }}
+    {% endif %}
+  {% endblock %}
+
+  {{ form.errors(error_summary) }}
+
+  
+
+{% if authorized_user%}
+
+   {%if data.status!='harmonisation started'%}
+
+  <div class="form-actions">
+	  <button class="btn btn-danger" name="unharmonise" value="unharmonise-catalogue" type="unharmonise" >{{ _('Unharmonise Catalogue') }}</button>
+      <button class="btn btn-primary" name="save" value="go-harmonisation-complete" type="submit">{{ _('Harmonise Catalogue') }}</button>
+     
+  </div>
+
+{%endif%}
+{%endif%}
+
+
+
+</form>

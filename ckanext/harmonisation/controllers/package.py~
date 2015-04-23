@@ -1,0 +1,443 @@
+from ckan.lib.base import BaseController, c
+from ckan.controllers.package import PackageController
+import ckan.lib.base as base
+import ckan.lib.helpers as h
+import ckan.logic as logic
+import ckan.model as model
+from ckanext.harvestodm.logic.action.create import harvest_source_create
+from ckan.lib.base import c
+
+from ckan.model import Session, Package
+from ckan.common import OrderedDict, _, json, request, c, g, response
+import ckan.lib.navl.dictization_functions as dict_fns
+from ckanext.harmonisation.plugin import DATASET_TYPE_NAME
+from ckanext.harvestodm.plugin import _create_harvest_source_object
+import json
+import logging
+import SaveLabels
+import uuid
+import AutoMetadataFinder
+import pymongo
+import bson
+import MetadataFinder
+import sys
+#reload(sys)
+#sys.setdefaultencoding("utf-8")
+##---------------------------------------------
+import configparser
+
+##read from development.ini file all the required parameters
+config = configparser.ConfigParser()
+config.read('/var/local/ckan/default/pyenv/src/ckan/development.ini')
+mongoclient=config['ckan:odm_extensions']['mongoclient']
+mongoport=config['ckan:odm_extensions']['mongoport']
+
+
+#--list of non label data
+nonlabel=[]
+# list of label data
+label=[]
+links=[]
+url=""
+cat_url=""
+step=""
+after_url=""
+next=""
+name=""
+identifier=""
+title=""
+notes=""
+publisher1=""
+date1=""
+contactpoint1=""
+tags1=""
+resource1=""
+license1=""
+startdate1=""
+enddate1=""
+title1=""
+harvest_frequency=""
+category=""
+category1=""
+language=""
+language1=""
+frequency=""
+frequency1=""
+version=""
+version1=""
+maintainer=""
+maintainer1=""
+updatedate=""
+updatedate1=""
+catalogues_description=""
+
+log = logging.getLogger(__name__)
+
+render = base.render
+abort = base.abort
+redirect = base.redirect
+
+get_action = logic.get_action
+clean_dict = logic.clean_dict
+tuplize_dict = logic.tuplize_dict
+parse_params = logic.parse_params
+NotFound = logic.NotFound
+NotAuthorized = logic.NotAuthorized
+
+client = pymongo.MongoClient(str(mongoclient), int(mongoport))
+
+class CustomMetaSchemaController(PackageController):
+
+
+    def __before__(self, action, **params):
+
+        super(CustomMetaSchemaController, self).__before__(action, **params)
+
+        c.dataset_type = DATASET_TYPE_NAME
+
+    def new_custom_metaharvester(self):
+
+        return render('new_custom1.html')
+        #return render(self._new_template(package_type),
+                              #extra_vars={'stage': 'active'})
+
+    def read_data(self, data=None):
+	if request.method == 'POST' and not data:
+	    data = data or clean_dict(dict_fns.unflatten(tuplize_dict(parse_params(request.POST))))
+	    try:
+	    	#cat_url=data['cat_url']
+		notes=data['notes']
+	    except KeyError:
+		#cat_url=""
+		notes=""
+
+	#    couch = pycouchdb.Server(SERVER_URL)
+	    if notes!="":
+		save_action = request.params.get('save')
+
+		data = data or clean_dict(dict_fns.unflatten(tuplize_dict(parse_params(request.POST))))
+	    else:
+		errors=''
+		url=str(data['url'])
+		language=str(data['language'])
+		step=str(data['step'])	
+		cat_url=str(data['cat_url'].encode('utf-8'))
+		after_url=str(data['afterurl'].encode('utf-8'))
+		catalogue_date_created=str(data['catalogue_date_created'])
+		catalogues_description=str(data['catalogues_description'])
+		catalogue_date_updated=str(data['catalogue_date_updated'])
+		identifier=str(data['identifier'])
+		catalogue_country=str(data['catalogue_country'])
+		catalogue_title=str(data['catalogue_title'])
+		harvest_frequency=str(data['harvest_frequency'])
+		autofind=AutoMetadataFinder.AutoFindingElements(url)
+
+
+		
+		if 'https' not in url:
+			mainurl1=url[url.find('http://')+7:]
+			mainurl='http://'+mainurl1[0:mainurl1.find('/')]
+		if 'https' in url:
+			mainurl1=url[url.find('https://')+8:]
+			mainurl='http://'+mainurl1[0:mainurl1.find('/')]
+
+		db3 = client.odm
+		collection1=db3.catalogregistry
+		# check if url exists in catalog. then update the one existes. Otherwise search automatically or metadata labels
+		SearchForJobExistance=collection1.find_one({'url': {'$regex': str(mainurl)}});
+		#text_file.write("--->))))  "+str(SearchForJobExistance))
+		reload(sys)
+		sys.setdefaultencoding("utf-8")
+		if SearchForJobExistance==None:
+			data.update({"license":str(autofind['license'])})
+			data.update({"tags":str(autofind['tags'])})
+			data.update({"category":str(autofind['category']).decode('utf-8')})
+			data.update({"author_email":str(autofind['author_email'])})
+			data.update({"date_released":str(autofind['date_released'])})
+			data.update({"frequency":str(autofind['frequency'])})
+			#data.update({"language":str(autofind['language'])})
+			data.update({"maintainer":str(autofind['maintainer'])})
+			data.update({"notes":str(autofind['notes'])})
+			data.update({"author":str(autofind['author'])})
+			data.update({"resource":str(autofind['resource'])})
+			data.update({"date_updated":str(autofind['date_updated'])})
+			data.update({"country":str(autofind['country'])})
+			data.update({"temporal_coverage":str(autofind['temporal_coverage'])})
+			data.update({"organization":str(autofind['organization'])})
+			data.update({"maintainer_email":str(autofind['maintainer_email'])})
+			data.update({"state":str(autofind['state'])})
+			data.update({"city":str(autofind['city'])})
+
+		else:
+			data.update({"license":str(SearchForJobExistance['licence'].encode('utf-8'))})
+			data.update({"tags":str(SearchForJobExistance['tags'].encode('utf-8'))})
+			data.update({"category":str(SearchForJobExistance['category'].encode('utf-8'))})
+			data.update({"author_email":str(SearchForJobExistance['author_email'].encode('utf-8'))})
+			data.update({"date_released":str(SearchForJobExistance['date_released'].encode('utf-8'))})
+			data.update({"frequency":str(SearchForJobExistance['frequency'].encode('utf-8'))})
+			#data.update({"language":str(SearchForJobExistance['language'].encode('utf-8'))})
+			data.update({"maintainer":str(SearchForJobExistance['maintainer'].encode('utf-8'))})
+			data.update({"notes":str(SearchForJobExistance['notes'].encode('utf-8'))})
+			data.update({"author":str(SearchForJobExistance['author'].encode('utf-8'))})
+			data.update({"resource":str(SearchForJobExistance['resource'].encode('utf-8'))})
+			data.update({"date_updated":str(SearchForJobExistance['date_updated'].encode('utf-8'))})
+			data.update({"country":str(SearchForJobExistance['country'].encode('utf-8'))})
+			data.update({"temporal_coverage":str(SearchForJobExistance['temporal_coverage'].encode('utf-8'))})
+			#data.update({"cat_url":str(SearchForJobExistance['cat_url'].encode('utf-8'))})
+			#data.update({"step":str(SearchForJobExistance['step'].encode('utf-8'))})
+			#data.update({"identifier":str(SearchForJobExistance['identifier'].encode('utf-8'))})	
+			data.update({"organization":str(SearchForJobExistance['organization'].encode('utf-8'))})
+			data.update({"maintainer_email":str(SearchForJobExistance['maintainer_email'].encode('utf-8'))})
+			data.update({"state":str(SearchForJobExistance['state'].encode('utf-8'))})
+			data.update({"city":str(SearchForJobExistance['city'].encode('utf-8'))})
+			data.update({"jobExists":str(SearchForJobExistance)})
+			log.info(str(data))
+			#collection1.remove(SearchForJobExistance)
+		vars = {'data': data, 'errors': errors}
+	        package_type = self._guess_package_type(True)
+	        template = self._read_template(package_type)
+	        return render('new_custom.html', extra_vars=vars)
+
+	    if notes!="":
+
+		    url=str(data['url'])
+		   # name=data['name']
+		    identifier=str(data['identifier'])
+		    #title=data['title']
+		    cat_url=data['cat_url']
+		    step=data['step']
+		    after_url=data['afterurl']
+		  #  next=data['next']
+		    title=data['title']
+			
+		    #url=str(data['url'])
+		    language=str(data['language'])
+		   # step=str(data['step'])	
+		    #cat_url=str(data['cat_url'])
+		    #after_url=str(data['afterurl'])
+		    catalogue_date_created=str(data['catalogue_date_created'])
+		    catalogues_description=str(data['catalogues_description'])
+		    catalogue_date_updated=str(data['catalogue_date_updated'])
+		    #identifier=str(data['identifier'])
+		    catalogue_country=str(data['catalogue_country'])
+		    catalogue_title=str(data['catalogue_title'])
+		    harvest_frequency=str(data['harvest_frequency'])
+
+		    db3 = client.odm
+		    collection1=db3.catalogregistry
+		    collection2=db3.html_jobs
+
+		    #text_file.write("title:   "+str(title.encode('utf-8')))
+
+		    if title!='':
+			nonlabel.append(title)
+			title1=SaveLabels.NoLabelDataGetDiv(url,nonlabel)
+		    else: title1=""
+		    nonlabel[:]=[]
+
+		#-- edit --   job creation   
+		    (notes,notes_feature)=MetadataFinder.MetadataFinder('notes_feature','notes',data,url)
+		    (author1,author_feature)=MetadataFinder.MetadataFinder('author_feature','author',data,url)
+		    (country1,country_feature)=MetadataFinder.MetadataFinder('country_feature','country',data,url)
+		    (temporal_coverage1,temporal_coverage_feature)=MetadataFinder.MetadataFinder('temporal_coverage_feature','temporal_coverage',data,url)
+		    (date_released1,date_released_feature)=MetadataFinder.MetadataFinder('date_released_feature','date_released',data,url)		   
+		    
+		    (author_email1,author_email_feature)=MetadataFinder.MetadataFinder('author_email_feature','author_email',data,url)
+		    (tags1,tags_feature)=MetadataFinder.MetadataFinder('tags_feature','tags',data,url)
+		    (resource1,resource_feature)=MetadataFinder.MetadataFinder('resource_feature','resource',data,url)
+		    (license1,license_feature)=MetadataFinder.MetadataFinder('license_feature','licence',data,url)
+		    (category1,category_feature)=MetadataFinder.MetadataFinder('category_feature','category',data,url)
+
+		    (frequency1,frequency_feature)=MetadataFinder.MetadataFinder('frequency_feature','frequency',data,url)
+		    (maintainer1,maintainer_feature)=MetadataFinder.MetadataFinder('maintainer_feature','maintainer',data,url)
+		    (date_updated1,date_updated_feature)=MetadataFinder.MetadataFinder('date_updated_feature','date_updated',data,url)
+		    (organization1,organization_feature)=MetadataFinder.MetadataFinder('organization_feature','organization',data,url)
+		    (maintainer_email1,maintainer_email_feature)=MetadataFinder.MetadataFinder('maintainer_email_feature','maintainer_email',data,url)		   
+		    (state1,state_feature)=MetadataFinder.MetadataFinder('state_feature','state',data,url)
+		    (city1,city_feature)=MetadataFinder.MetadataFinder('city_feature','city',data,url)
+		    language=str(data['language'])
+		
+
+
+
+		## Add labels from form to autolabelfinder DB
+		    #db2 = couch.database("possible_labels")
+		    #autolabels=db2.get('37119d889f2a1ba15f61495d8500016e')
+
+		    db2 = client.odm
+		    collection=db2.possible_labels
+		    post_id=bson.ObjectId("537205927fd8852efdaf217c")
+		    autolabels=collection.find_one({"_id":post_id})
+
+		    if license_feature=='label' and not any(license1.decode('utf-8').strip() in s for s in autolabels['license']):
+		    	autolabels['license'].append(license1.strip())
+
+		    if category_feature=='label' and not any(category1.decode('utf-8').strip() in s for s in autolabels['category']):
+		    	autolabels['category'].append(category1.strip())
+
+	 	    if author_email_feature=='label' and not any(author_email1.decode('utf-8').strip() in s for s in autolabels['author_email']):
+		    	autolabels['author_email'].append(author_email1.strip())
+
+		    if date_released_feature=='label' and not any(date_released1.decode('utf-8').strip() in s for s in autolabels['date_released']):
+		    	autolabels['date_released'].append(date_released1.strip())
+
+		    if frequency_feature=='label' and not any(frequency1.decode('utf-8').strip() in s for s in autolabels['frequency']):
+		    	autolabels['frequency'].append(frequency1.strip())
+
+	 	    #if language_feature=='label' and not any(language1.decode('utf-8').strip() in s for s in autolabels['language']):
+		   # 	autolabels['language'].append(language1.strip())
+
+		    if maintainer_feature=='label' and not any(maintainer1.decode('utf-8').strip() in s for s in autolabels['maintainer']):
+		    	autolabels['maintainer'].append(maintainer1.strip())
+
+		    if notes_feature=='label' and not any(notes.decode('utf-8').strip() in s for s in autolabels['notes']):
+		    	autolabels['notes'].append(notes.strip())
+
+	 	    if author_feature=='label' and not any(author1.decode('utf-8').strip() in s for s in autolabels['author']):
+		    	autolabels['author'].append(author1.strip())
+
+		    if resource_feature=='label' and not any(resource1.decode('utf-8').strip() in s for s in autolabels['resource']):
+		    	autolabels['resource'].append(resource1.strip())
+
+		    if tags_feature=='label' and not any(tags1.decode('utf-8').strip() in s for s in autolabels['tags']):
+			autolabels['tags'].append(tags1.strip())
+
+	 	    if date_updated_feature=='label' and not any(date_updated1.decode('utf-8').strip() in s for s in autolabels['date_updated']):
+		    	autolabels['date_updated'].append(date_updated1.strip())
+
+
+		    if country_feature=='label' and not any(country1.decode('utf-8').strip() in s for s in autolabels['country']):
+		    	autolabels['country'].append(country1.strip())
+		    if temporal_coverage_feature=='label' and not any(temporal_coverage1.decode('utf-8').strip() in s for s in autolabels['temporal_coverage']):
+		    	autolabels['temporal_coverage'].append(temporal_coverage1.strip())
+
+		    if organization_feature=='label' and not any(organization1.decode('utf-8').strip() in s for s in autolabels['organization']):
+		    	autolabels['organization'].append(organization1.strip())
+		    if maintainer_email_feature=='label' and not any(maintainer_email1.decode('utf-8').strip() in s for s in autolabels['maintainer_email']):
+		    	autolabels['maintainer_email'].append(maintainer_email1.strip())
+		    if state_feature=='label' and not any(state1.decode('utf-8').strip() in s for s in autolabels['state']):
+		    	autolabels['state'].append(state1.strip())
+		    if city_feature=='label' and not any(city1.decode('utf-8').strip() in s for s in autolabels['city']):
+		    	autolabels['city'].append(city1.strip())
+		    #collection.save(autolabels)
+
+
+	 	##Job's json creation
+	  	    job={'url':url,'cat_url':cat_url,'step':step,'afterurl':after_url,'identifier':identifier,'title':title,'notes':notes.strip()+'@/@'+notes_feature.encode('utf-8'),'author':author1.strip()+'@/@'+author_feature.encode('utf-8'),'date_released':date_released1.strip()+'@/@'+date_released_feature.encode('utf-8'),'author_email':author_email1.strip()+'@/@'+author_email_feature.encode('utf-8'),'tags':tags1.strip()+'@/@'+tags_feature.encode('utf-8'),'resource':resource1.strip()+'@/@'+resource_feature.encode('utf-8'),'license':license1.strip()+'@/@'+license_feature.encode('utf-8'),'title':title1+'@/@value','category':category1.strip()+'@/@'+category_feature.encode('utf-8'),'language':language,'frequency':frequency1.strip()+'@/@'+frequency_feature.encode('utf-8'),'maintainer':maintainer1.strip()+'@/@'+maintainer_feature.encode('utf-8'),'date_updated':date_updated1.strip()+'@/@'+date_updated_feature.encode('utf-8'),'country':country1.strip()+'@/@'+country_feature.encode('utf-8'),'organization':organization1.strip()+'@/@'+organization_feature.encode('utf-8'),'maintainer_email':maintainer_email1.strip()+'@/@'+maintainer_email_feature.encode('utf-8'),'state':state1.strip()+'@/@'+state_feature.encode('utf-8'),'city':city1.strip()+'@/@'+city_feature.encode('utf-8'),'temporal_coverage':temporal_coverage1.strip()+'@/@'+temporal_coverage_feature.encode('utf-8'),'type':'html'}
+
+		    log.info('\n'+'this is json: '+str(job)+'\n')
+		    SearchForJobExistance=list(collection2.find({'cat_url':str(cat_url)}));
+		    c=0
+		    while c< len(SearchForJobExistance):
+			collection2.remove(SearchForJobExistance[c])
+			c+=1
+		    try:
+			db1 = db2.html_jobs
+			db1.save(job)
+		    except AttributeError as e:
+			log.warn('error: {0}', e)
+
+		## add resource to ckan repository
+		  #  if 'https' not in str(cat_url):
+		    #	name_temp=cat_url.replace('http://','').replace('.','_')
+		    #	name=name_temp[:name_temp.find('/')]
+		    #	title=name
+		    #	package_id=cat_url
+		    #if 'https' in str(cat_url):
+		    #	name_temp=cat_url.replace('https://','').replace('.','_')
+		    #	name=name_temp[:name_temp.find('/')]
+		    #	title=name
+		    #	package_id=cat_url
+		    name=catalogue_title.replace('.','-').replace(' ','-').replace('_','-').replace('(','-').replace(')','-').replace('[','-').replace(']','-').replace(',','-').replace(':','-')
+		    package_id=cat_url
+	            dataset_dict = {
+    			'name': str(name),
+    			'id':str(uuid.uuid3(uuid.NAMESPACE_OID, str(cat_url))),
+			'frequency':str(harvest_frequency),
+			'url': str(cat_url),
+			'title': str(catalogue_title),
+			'package_id':str(package_id),
+			'source_type':'html',
+			'description':str(catalogues_description),
+			'catalogue_date_created':str(catalogue_date_created),
+			'catalogue_date_updated':str(catalogue_date_updated),
+			'catalogue_country':str(catalogue_country),
+			'language':str(language)
+				}
+		    print(dataset_dict)
+
+		    #AddResourceToCkan.AddResourceToCkan(dataset_dict)
+		    context = {'model': model, 'session': Session, 'user': u'admin','message': '','save': True}
+		    harvest_source_create(context,dataset_dict)
+		    #dataset_dict.update({'catalogue_date_created':str(catalogue_date_created),'catalogue_date_updated':str(catalogue_date_updated),'catalogue_country':str(catalogue_country)})
+		    
+
+		    # we don't want to include save as it is part of the form
+
+		    del data['save']
+		    resource_id = data['id']
+		    del data['id']
+		    SearchForJobExistance=list(collection1.find({'cat_url':str(cat_url)}));
+		    c=0
+		    while c< len(SearchForJobExistance):
+			collection1.remove(SearchForJobExistance[c])
+			c+=1
+		    try:
+
+			db = db2.catalogregistry
+			db.save(data)
+
+		    except AttributeError as e:
+			log.warn('error: {0}', e)
+		   # harvester.read_data()
+
+		#last edit 4-6-2014 (next line made comment.)
+		   # context = {'model': model, 'session': model.Session,
+			     #  'user': c.user or c.author}
+
+		    # see if we have any data that we are trying to save
+		    data_provided = False
+		    for key, value in data.iteritems():
+			if value and key != 'resource_type':
+			    data_provided = True
+			    break
+
+		    if not data_provided and save_action != "go-dataset-complete":
+			if save_action == 'go-dataset':
+			    # go to final stage of adddataset
+			    redirect(h.url_for(controller='package',
+			                       action='edit', id=id))
+			# see if we have added any resources
+			try:
+			    data_dict = get_action('package_show')(context, {'id': id})
+			except NotAuthorized:
+			    abort(401, _('Unauthorized to update dataset'))
+			except NotFound:
+			    abort(404,
+			      _('The dataset {id} could not be found.').format(id=id))
+			if not len(data_dict['resources']):
+			    # no data so keep on page
+			    msg = _('You must add at least one data resource')
+			    # On new templates do not use flash message
+			    if g.legacy_templates:
+			        h.flash_error(msg)
+			        redirect(h.url_for(controller='package',
+			                           action='new_resource', id=id))
+			    else:
+			        errors = {}
+			        error_summary = {_('Error'): msg}
+			        return self.new_resource(id, data, errors, error_summary)
+
+
+        log.info('metaschemaform: action triggered: %r', data)
+
+        package_type = self._guess_package_type(True)
+
+        template = self._read_template(package_type)
+       # template = template[:template.index('.') + 1] + format
+
+    	#return render('/sources/read.html')
+        return render(template, loader_class='html')
+
+
+	

@@ -1,0 +1,38 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Create Custom Harmonisation Rule') }}{% endblock %}
+
+{% block primary_content %}
+  {{ super() }}
+  <section class="module">
+    <div class="module-content">
+      {% block form %}{{ c.form | safe }}{% endblock %}
+    </div>
+  </section>
+{% endblock %}
+
+
+{% block secondary_content %}
+  {{ super() }}
+  <section class="module module-narrow">
+    <h2 class="module-heading"><i class="icon-large icon-info-sign"></i> {{ _('Catalog Registry') }}</h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+        A Catalog Registry is a database with all the OpenData sites that are
+        monitored...
+        {% endtrans %}
+      </p>
+    </div>
+  </section>
+{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_named_link(_('Custom MetaHarvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+  <li class="active">{{ h.nav_named_link(_('Create Custom MetaHarvest Source'), '{0}_new'.format(c.dataset_type)) }}</li>
+{% endblock %}
+
+{% block actions_content %}
+  {{ super() }}
+  <li class="active">{% link_for _('New Dataset'), controller='package', action='new', class_='btn', icon='plus' %}</li>
+{% endblock %}

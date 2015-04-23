@@ -1,0 +1,257 @@
+{% import 'macros/form.html' as form %}
+
+{% set data = data or {} %}
+{% set errors = errors or {} %}
+{#{% set action = form_action or h.url_for(controller='ckanext.harmonisation.controllers.package:CustomHarmonisationController',
+    action='read_data_', id=pkg_name) %}
+    #}
+{% set action = h.url_for(controller='ckanext.harmonisation.controllers.package:CustomHarmonisationController',
+action='read_data') %}
+
+
+
+
+<form class="dataset-form dataset-resource-form form-horizontal" method="post" action="{{ action }}" data-module="basic-form resource-form">
+  {% block stages %}
+    {# An empty stages variable will not show the stages #}
+    {% if stage %}
+      {{ h.snippet('package/snippets/stages.html', stages=stage, pkg_name=pkg_name) }}
+    {% endif %}
+  {% endblock %}
+
+  {{ form.errors(error_summary) }}
+
+  
+  
+  <input name="id" value="{{ data.id }}" type="hidden"/>
+  <input name="catalogues_description" value="{{ data.catalogues_description }}" type="hidden"/>
+  <input name="catalogue_date_created" value="{{ data.catalogue_date_created }}" type="hidden"/>
+  <input name="catalogue_date_updated" value="{{ data.catalogue_date_updated }}" type="hidden"/>
+  <input name="harvest_frequency" value="{{ data.harvest_frequency }}" type="hidden"/>
+  <input name="catalogue_country" value="{{ data.catalogue_country }}" type="hidden"/>
+  <input name="catalogue_title" value="{{ data.catalogue_title }}" type="hidden"/>
+<input name="url" value="{{ data.url }}" type="hidden"/>
+<input name="cat_url" value="{{ data.cat_url }}" type="hidden"/>
+<input name="step" value="{{ data.step }}" type="hidden"/>
+<input name="afterurl" value="{{ data.afterurl}}" type="hidden"/>
+<input name="language" value="{{ data.language }}" type="hidden"/>
+<input name="identifier" value="{{ data.identifier }}" type="hidden"/>
+
+   
+
+
+    <h1 class="module-heading">{{ _('Metadata to Harvest') }}</h1>
+  
+    {% block metadata_fields %}
+        {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), 
+            value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+        <br></br> 
+        {% block basic_fields_description %}
+            {{ form.markdown('notes', id='field-notes', label=_('Description'),
+            placeholder=_('Some useful notes about the data'),
+            value=data.description, error=errors.description) }}
+        
+            {{ form.select('notes_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.notes_feature) }} 
+        {% endblock %}
+
+<br></br>       
+
+
+        {#        {{ form.checkbox('', id='field-label_notes', label=_(''),
+        value=data.label_notes, checked=true)  }}#}
+
+        {{ form.input('author', id='field-publisher', label=_('Author'),  
+            value=data.author, error=errors.author, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+      
+        {{ form.select('author_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.author_feature) }} 
+<br></br>
+	{{ form.input('maintainer', id='field-last-modified', label=_('Maintainer'), placeholder=_('eg. Maintainer:'), value=data.maintainer,
+        error=errors.maintainer, classes=[]) }}
+        
+      {{ form.select('maintainer_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.maintainer_feature) }}
+
+<br></br>
+	{{ form.input('organization', id='field-organization', label=_('Organization'),  
+            value=data.organization, error=errors.organization, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+      
+        {{ form.select('organization_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'},{'value':'link', 'text':'Link'}], error=errors.organization_feature) }} 	
+
+<br></br>	 
+	
+	  {{ form.input('author_email', id='field-title', label=_('Author Email'), 
+            value=data.author_email, error=errors.author_email, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('author_email_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.author_email_feature) }} 
+
+<br></br>	
+	{{ form.input('maintainer_email', id='field-title', label=_('Maintainer Email'), 
+            value=data.maintainer_email, error=errors.maintainer_email, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('maintainer_email_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.maintainer_email_feature) }} 
+
+<br></br>
+	{{ form.input('country', id='field-title', label=_('Country'), 
+            value=data.country, error=errors.country, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('country_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.country_feature) }} 
+
+
+<br></br>
+	{{ form.input('state', id='field-title', label=_('State'), 
+            value=data.state, error=errors.state, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('state_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.state_feature) }} 
+
+
+<br></br>
+	{{ form.input('city', id='field-title', label=_('City'), 
+            value=data.city, error=errors.city, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('city_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.city_feature) }} 
+
+
+
+
+<br></br>
+	{{ form.input('temporal_coverage', id='field-title', label=_('Temporal Coverage'), 
+            value=data.temporal_coverage, error=errors.temporal_coverage, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('temporal_coverage_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.temporal_coverage_feature) }} 
+
+
+   <br></br>     
+        {{ form.input('date_released', id='field-date', label=_('Date Released'), value=data.date_released, error=errors.date_released, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('date_released_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.date_released_feature) }} 
+
+<br></br>
+	  {{ form.input('date_updated', id='field-last-modified', label=_('Date Updated'), value=data.date_updated,
+        error=errors.date_updated, classes=[]) }}
+        
+      {{ form.select('date_updated_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.date_updated_feature) }}
+
+     
+      
+
+<br></br>
+        
+        {{ form.input('tags', id='field-title', label=_('Keywords/Tags'), 
+            value=data.tags, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+        {{ form.select('tags_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.tags_feature) }} 
+        
+            {# TODO: Where do these come from, they don't exist in /package/new_package_form.html #}
+<br></br>
+      {{ form.input('resource', id='field-resource', label=_('Resource'),
+      value=data.resource, error=errors.resource, classes=['control-full', 'control-large']) }}
+      {# {{ form.select('resource_type', id='field-type', label=_('Resource Type'), 
+      options=[{'value': 'empty', 'text': _('Select a type…')}],
+      selected="empty", error=errors.type) }}#}
+
+      {{ form.select('resource_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'},{'value':'link', 'text':'Link'}], error=errors.resource_feature) }} 
+<br></br>
+      {{ form.input('licence', id='field-last-modified', label=_('Licence'),
+       value=data.license,
+      error=errors.licence, classes=[]) }}
+
+      {{ form.select('license_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.license_feature) }} 
+
+    
+    <br></br>        
+      
+      {{ form.input('category', id='field-last-modified', label=_('Theme/Category'), value=data.category,
+        error=errors.category, classes=[]) }}
+        
+      {{ form.select('category_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.category_feature) }} 
+      
+      
+       
+        
+      
+      
+ <br></br>
+      
+      {{ form.input('frequency', id='field-last-modified', label=_('Frequency'),  value=data.frequency,
+        error=errors.frequency, classes=[]) }}
+        
+      {{ form.select('frequency_feature', id='field-notes_feature',
+            label=_('Feature'), options=[{ "value": "label", "text": "Label" },
+            {'value':'value', 'text':'Value'}], error=errors.frequency_feature) }}
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+<br></br>
+
+      {#      {{ form.input('mimetype', id='field-mimetype', label=_('MIME Type'), value=data.mimetype, error=errors.mimetype, classes=[]) }}
+      #}
+      
+  
+    {% endblock %}
+
+  <div class="form-actions">
+      {#  {% block delete_button %}
+      {% if data.id %}
+        {% if h.check_access('resource_delete', {'id': data.id})  %}
+          {% set locale = h.dump_json({'content': _('Are you sure you want to delete this resource?')}) %}
+          <a class="btn btn-danger pull-left" href="{% url_for controller='package', action='resource_delete', resource_id=data.id, id=pkg_name %}" data-module="confirm-action" data-module-i18n="{{ locale }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
+        {% endif %}
+      {% endif %}
+    {% endblock %}
+    {% if stage %}
+    {% block previous_button %}
+      <button class="btn" name="save" value="go-dataset" type="submit">{{ _('Previous') }}</button>
+    {% endblock %}
+    {% block again_button %}
+      <button class="btn" name="save" value="again" type="submit">{{ _('Save & add another') }}</button>
+    {% endblock %}
+    <button class="btn btn-primary" name="save" value="go-metadata" type="submit">{% block save_button_text %}{{ _('Next: Additional Info') }}{% endblock %}</button>
+    {% else %}#}
+      <button class="btn btn-primary" name="save" value="go-metaschema-complete" type="submit">{{ _('Save') }}</button>
+      {#  {% endif %}#}
+  </div>
+
+
+
+
+
+
+</form>

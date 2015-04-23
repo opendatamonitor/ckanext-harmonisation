@@ -1,0 +1,33 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _("Custom MetaHarvest sources") }}{% endblock %}
+
+
+{% block breadcrumb_content %}
+{#    <li class="active">{{ h.nav_link(_('Custom MetaHarvest Sources'), 
+    controller='package',  action='{0}_search'.format(c.dataset_type), highlight_actions = 'new index') }}</li>
+    #}
+  <li class="active">{{ h.nav_named_link(_('Custom MetaHarvest Sources'),
+    '{0}_search'.format(c.dataset_type)) }}</li>
+{% endblock %}
+
+
+<section class="module">
+    <div class="module-content">
+    {% block page_primary_action %}
+        
+        <div class="harvest-types control-group">
+            <label class="control-label">Source type</label>
+            <div class="controls">
+                  
+                {{ h.snippet('snippets/add_metaschemaform_button.html', dataset_type=c.dataset_type) }}
+            </div>
+        </div>
+
+    {% endblock %}
+
+    {{ c.page.pager(q=c.q) }}
+</section>
+
+{% block secondary_content %}
+{% endblock %}

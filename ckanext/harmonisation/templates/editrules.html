@@ -1,0 +1,35 @@
+{% extends "sources/base_form_page1.html" %}
+
+{% block subtitle %}{{ _('Edit Rules') }}{% endblock %}
+
+{% block form %}{% snippet 'snippets/main_editrules.html', data=data, errors=errors, 
+    error_summary=error_summary, include_metadata=false, pkg_name=pkg_name, stage=stage, 
+    allow_upload=g.ofs_impl and logged_in %}
+{% endblock %}
+
+{% block secondary_content %}
+  {% if pkg_dict and pkg_dict.state != 'draft' %}
+    {% snippet 'package/snippets/info.html', pkg=pkg_dict, action='resource_new' %}
+  {% else %}
+    {% block info_module %}
+        <section class="module module-narrow module-shallow">
+        <h2 class="module-heading"><i class="icon-info-sign"></i> {{ _('Harmonisation Dashboard') }}</h2>
+        <div class="module-content">
+            <p>
+            {% trans %}
+          
+            {% endtrans %}
+            </p>
+        </div>
+        </section>
+    {% endblock %}
+
+  {% endif %}
+{% endblock %}
+
+{% block primary_content %}
+  {% if pkg_dict and pkg_dict.state != 'draft' %}
+    <header class="module-content page-header"></header>
+  {% endif %}
+  {{ super() }}
+{% endblock %}

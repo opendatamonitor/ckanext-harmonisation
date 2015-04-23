@@ -1,0 +1,27 @@
+{% import 'macros/form.html' as form %}
+
+<form id="source-new" class="form-horizontal" method="post" >
+
+  {% call form.input('url', id='field-url', label=_('URL'), value=data.url, error=errors.url, classes=['control-full', 'control-large']) %}
+      <span class="info-block">
+        {{ _('This should include the http:// part of the URL') }}
+      </span>
+  {% endcall %}
+
+  {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), 
+    value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+  {{ form.input('publisher', id='field-publisher', label=_('Publisher'),  
+    value=data.publisher, error=errors.publisher, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+  
+  {{ form.input('date', id='field-date', label=_('Date'),  
+    value=data.date, error=errors.date, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
+
+    
+  {{ form.markdown('notes', id='field-notes', label=_('Description'), value=data.notes, error=errors.notes) }}
+
+  <p class="form-actions">
+     <input id="save" name="save" value="Save" type="submit" class="btn btn-primary pull-right">
+  </p>
+
+</form>

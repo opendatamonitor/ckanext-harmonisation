@@ -1,0 +1,15 @@
+{% extends "sources/read_base.html" %}
+
+{% block primary_content_inner %}
+  <section class="module-content">
+    <p> Harvest source created succesfully..
+    </p>
+   
+
+   <a href={{ app_globals.site_url ~"/harvest"}} class="btn btn-primary">
+    <i class="icon-plus-sign-alt"></i>
+      {{ _('Return to harvest sources') }}
+  </a>
+
+  </section>
+{% endblock %}
