@@ -223,7 +223,7 @@ action='main_dashboard') %}
 
   
 
-{% if authorized_user%}
+{%if user=='admin'%}
 
    {%if data.status!='harmonisation started'%}
 
@@ -234,8 +234,8 @@ action='main_dashboard') %}
   </div>
 
 {%endif%}
-{%endif%}
 
+{%endif%}
 
 
 </form>

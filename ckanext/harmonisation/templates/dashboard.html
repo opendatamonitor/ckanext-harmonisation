@@ -3,7 +3,7 @@
 {% block subtitle %}{{ _('Create Harmonisation Rule') }}{% endblock %}
 
 {% block form %}{% snippet 'snippets/main_dashboard.html', data=data, errors=errors, 
-    error_summary=error_summary, include_metadata=false, pkg_name=pkg_name, stage=stage, 
+    error_summary=error_summary, include_metadata=false, pkg_name=pkg_name, stage=stage,user=c.user, 
     allow_upload=g.ofs_impl and logged_in %}
 {% endblock %}
 
@@ -19,6 +19,7 @@
             {% trans %}
           
             {% endtrans %}
+            
             </p>
         </div>
         </section>
