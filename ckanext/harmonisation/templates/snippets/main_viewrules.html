@@ -124,14 +124,14 @@ action='view_rules') %}
 
 
 
-
+{%if user=='admin' or  user=='provider'%}
 
   <div class="form-actions">
     
       <button class="btn btn-primary" name="save" value="viewrules-complete" type="submit">{{ _('Add Mapping') }}</button>
       
   </div>
-
+{% endif %}
 
 
 

@@ -68,9 +68,9 @@ def Copy_Odm_to_Odm_harmonised(cat_url):
   text_file.write(str(datetime.now())+' - harmonisation_engine - Harmonisation_engine process started.'+'\n')
   counter=0
   #the collection we wanna copy datasets
-  odm_collection=db.test
+  odm_collection=db.odm
   #the collection we ll store all new datasets
-  odm_harmonised_collection=db.testaki
+  odm_harmonised_collection=db.odm_harmonised
 
   datasets=list(odm_collection.find({'catalogue_url':cat_url}));
   print(str(len(datasets)))
@@ -916,7 +916,7 @@ def HarmoniseBadFormats(cat_url):
 						m=0
 						while m<len(formats):
 
-						  resource_json={"url":str(url1),"format":str(formats[m]).lower()}
+						  resource_json={"url":str(url1.encode('utf-8')),"format":str(formats[m]).lower()}
 						  resources_json.append(resource_json)
 
 						  m+=1
@@ -1715,7 +1715,10 @@ def HarmoniseCategoryLabels(cat_url):
   counter_broken_links=0
   from dictionaries import basic_category_labels_dict
   doc=collection1.find_one({"cat_url":cat_url})
-  user=doc['user']
+  try:
+  	user=doc['user']
+  except:
+	user=''
   #categories_dictionary=categories_dict.find_one({'cat_url':str(cat_url)})
   categories_dictionary1=categories_dict_basic.find_one()
   categories_dictionary2=categories_dict_user.find_one({'user':str(user)})
@@ -1775,8 +1778,8 @@ def HarmoniseCategoryLabels(cat_url):
 
 				  if extras_keys[j]==categorymappings_keys[k]:
 
-					  extras[str(categorymappings[str(categorymappings_keys[k])])] = extras[str(extras_keys[j])]
-					  del extras[str(extras_keys[j])]
+					  extras[unicode(categorymappings[unicode(categorymappings_keys[k])])] = extras[unicode(extras_keys[j])]
+					  del extras[unicode(extras_keys[j])]
 					  datasets[i]['harmonised'].update({'harmonised_CategoryLabels':True})
 					  datasets[i]['harmonised'].update({'harmonised_CategoryLabels_date':datetime.now()})
 					  collection.save(datasets[i])
@@ -2160,7 +2163,7 @@ def HarmoniseCountries(cat_url):
 				    if 'extras' in dataset.keys() and 'category' in dataset['extras'].keys():
 				        category,sub_category,non_empty=HarmoniseCategoryValues(cat_url,logger,dataset)
 				        if non_empty and category:
-				            db.update({'_id':dataset['_id']},{'$set':{'category':category,'sub_category':sub_category}})
+				            db.update({'_id':dataset['_id']},{'$set':{'odm_category':category,'odm_sub_category':sub_category}})
 				        elif non_empty:
 				            # print('%s dataset with category \'%s\' is not harmonized' % (dataset['_id'],dataset['extras']['category']))
 				            no_categoriesNotHarmonized=no_categoriesNotHarmonized+1
@@ -2206,7 +2209,10 @@ def HarmoniseCategoryValues(cat_url,logger,dataset={}):
         mapped_subcategories=[]
         #category_values=categories_values_dict.find_one({'cat_url':str(cat_url)})
         doc=collection1.find_one({"cat_url":cat_url})
-        user=doc['user']
+	try:
+        	user=doc['user']
+	except:
+		user=''
         categories_values_dictionary1=categories_values_dict_basic.find_one()
         categories_values_dictionary2=categories_values_dict_user.find_one({'user':str(user)})
         if categories_values_dictionary2==None:categories_values_dictionary2={}
@@ -2217,7 +2223,7 @@ def HarmoniseCategoryValues(cat_url,logger,dataset={}):
         	category_values.update({categories_values_dictionary1.keys()[i]:categories_values_dictionary1[categories_values_dictionary1.keys()[i]]})
         	i+=1
         i=0
-        while i<len(categories_dictionary2):
+        while i<len(categories_values_dictionary2):
         	category_values.update({categories_values_dictionary2.keys()[i]:categories_values_dictionary2[categories_values_dictionary2.keys()[i]]})
         	i+=1
         i=0

@@ -403,6 +403,8 @@ class CustomHarmonisationController(PackageController):
 		  
 		  document=collection.find_one({'cat_url':str(cat_url)})
 		  document1=collection1.find_one({'cat_url':str(cat_url)})
+		  if document1==None:
+			document1={}
 		  print(document1)
 		  #print('document1: ')
 		  #print(document1)
