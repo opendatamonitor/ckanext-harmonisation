@@ -390,6 +390,7 @@ def slave():
 
 	  job=jobs.find_one({'id':harmonise_job['id']})
 	  job.update({"harmonised":"finished"})
+	  job.update({"available":True})
 	  job['harmonisation'].update({"harmonisation_status":"harmonised"})
 	  jobs.save(job)
 	##harmonisation job finished - delete it
