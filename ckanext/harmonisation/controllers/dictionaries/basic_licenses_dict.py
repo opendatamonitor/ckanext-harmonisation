@@ -552,5 +552,18 @@ licenses_dict={
     "Private" : "license not specified",
     "Creative Commons Reconocimiento 3(dot)0Información Adicional:Sistema de Información Estadística (SIE)" : "CC BY-3.0",
     "cc-by-3-fi" : "CC BY-3.0",
-    "ukcrown" : "UK Crown Copyright"
+    "ukcrown" : "UK Crown Copyright",
+    ">http://creativecommons(dot)org/licenses/by/3(dot)0/es" : "CC BY-3.0 ES",
+">http://www(dot)cis(dot)es/cis/opencms/ES/Avisolegal(dot)html" : "SOGL",
+">http://www(dot)opendefinition(dot)org/licenses/odc-by" : "ODC-BY",
+">http://www(dot)opendefinition(dot)org/licenses/cc-by" : "CC BY",
+">http://www(dot)cis(dot)es/cis/opencms/ES/2_bancodatos/Productos(dot)html" : "other (not open)",
+">http://opendata(dot)aragon(dot)es/terminos" : "CC BY-4.0",
+">http://centrodedescargas(dot)cnig(dot)es/CentroDescargas/index(dot)jsp" : "other (non-commercial)",
+"Aviso legal  >http://www(dot)csic(dot)es/web/guest/aviso-legal" : "SOGL",
+"Todos los conjuntos de datos de esta sección, si no se indica lo contrario, se publican bajo los términos de la licencia Creative Commons-Reconocimiento (CC-by 3(dot)0) >http://www(dot)pamplona(dot)es/VerPagina(dot)asp?IdPag=9&Idioma=1" : "CC BY-3.0",
+">http://centrodedescargas(dot)cnig(dot)es/CentroDescargas/cambiarMenu(dot)do?destino=infoEquipamiento" : "other (non-commercial)",
+"Aviso legal  >http://www(dot)bne(dot)es/es/NavegacionRecursiva/Pie/avisoLegal/" : "license not specified",
+"cc-by 4(dot)0 >http://opendata(dot)aragon(dot)es/terminos" : "CC BY-4.0",
+">http://www(dot)opendefinition(dot)org/licenses/cc-by-sa" : "CC BY-SA"
 }
