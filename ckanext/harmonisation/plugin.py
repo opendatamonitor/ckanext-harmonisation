@@ -1,9 +1,9 @@
 import logging
 
-import ckan.model           as model
-import ckan.plugins         as p
+import ckan.model as model
+import ckan.plugins as p
 import ckan.plugins.toolkit as tk
-import ckan.logic           as logic
+import ckan.logic as logic
 
 log = logging.getLogger(__name__)
 assert not log.disabled
@@ -20,9 +20,8 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.ITemplateHelpers)
    # p.implements(p.IFacets, inherit=True)
-  
 
-    ## IDatasetForm
+    # IDatasetForm
 
     def is_fallback(self):
         return False
@@ -42,15 +41,15 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
     def new_template(self):
         return 'sources/new.html'
 
-    #def edit_template(self):
-        #return 'source/edit.html'
-  
+    # def edit_template(self):
+        # return 'source/edit.html'
+
     def setup_template_variables(self, context, data_dict):
 
         #p.toolkit.c.harvest_source = p.toolkit.c.pkg_dict
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
- 
+
     def update_config(self, config):
         # check if new templates
         p.toolkit.add_template_directory(config, 'templates')
@@ -58,32 +57,32 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
 #        p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
 #        p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
-     ## ITemplateHelpers
+     # ITemplateHelpers
 
     def get_helpers(self):
         from ckanext.harmonisation import helpers as harmonisation_helpers
         return {
-                #'package_list_for_source': harvest_helpers.package_list_for_source,
-                'harmonisation_sources_list':harmonisation_helpers.harmonisation_sources_list,
-                'harmonisation_sources_rules_list':harmonisation_helpers.harmonisation_sources_rules_list
-                #'harvesters_info': harvest_helpers.harvesters_info,
-                #'harvester_types': harvest_helpers.harvester_types,
-                #'harvest_frequencies': harvest_helpers.harvest_frequencies,
-                #'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
-                #'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
-                }
+            #'package_list_for_source': harvest_helpers.package_list_for_source,
+            'harmonisation_sources_list': harmonisation_helpers.harmonisation_sources_list,
+            'harmonisation_sources_rules_list': harmonisation_helpers.harmonisation_sources_rules_list
+            #'harvesters_info': harvest_helpers.harvesters_info,
+            #'harvester_types': harvest_helpers.harvester_types,
+            #'harvest_frequencies': harvest_helpers.harvest_frequencies,
+            #'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
+            #'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
+        }
 
- 
     ## IConfigurable interface ##
 
     def configure(self, config):
         ''' Apply configuration options to this plugin '''
         pass
 
-    ## IPackageController
+    # IPackageController
 
     def after_create(self, context, data_dict):
-        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME and not self.startup:
+        if 'type' in data_dict and data_dict[
+                'type'] == DATASET_TYPE_NAME and not self.startup:
             log.info('Harmonisation_form: Nothing important')
 
     def before_map(self, m):
@@ -91,18 +90,18 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
         controller = 'ckanext.harmonisation.controllers.package:CustomHarmonisationController'
 
         m.connect('view_rules', '/' + DATASET_TYPE_NAME + '/view_rules',
-            controller = controller, action = 'view_rules')
-        
-        m.connect('main_dashboard', '/' + DATASET_TYPE_NAME ,
-            controller = controller, action = 'main_dashboard')
+                  controller=controller, action='view_rules')
+
+        m.connect('main_dashboard', '/' + DATASET_TYPE_NAME,
+                  controller=controller, action='main_dashboard')
 
         m.connect('edit_rules', '/' + DATASET_TYPE_NAME + '/edit_rules',
-            controller = controller, action = 'edit_rules')
-        #m.connect('/' + DATASET_TYPE_NAME + '/{controller}/{action}',
-                            #controller = controller, action = 'read_data')
+                  controller=controller, action='edit_rules')
+        # m.connect('/' + DATASET_TYPE_NAME + '/{controller}/{action}',
+        # controller = controller, action = 'read_data')
 
         m.connect('/' + DATASET_TYPE_NAME + '/{action}',
-                controller=controller,
+                  controller=controller,
                   requirements=dict(action='|'.join([
                       'read_data',
                       'main_dashboard',
@@ -117,6 +116,5 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
                       'delete',
                       'api_data',
                   ])))
-
 
         return m

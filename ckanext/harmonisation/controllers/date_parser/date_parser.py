@@ -20,7 +20,6 @@ import logging
 import re
 
 
-
 DATETIME_VALID_NONCHAR_SYMBOLS = u'\-|\—|\+|\/|\s|\d|\:|\,|\.'
 DATETIME_VALIDATION_REGEX = re.compile(u'%s|venerdì|lunedì|martedì|mercoledì|giovedì|sabato|domenica|mi茅rcoles|aprile|giugno|făšvrier|ottobre|maggio|luglio|gennaio|venerdăź|diciembre|dicembre|miăšrcoles|martedăź|săąbado|lunedăź|mercoledăź|giovedăź|at|понедельник|воскресенье|septiembre|donnerstag|september|diciembre|miércoles|September|Wednesday|noviembre|septembre|Thursday|dienstag|vendredi|novembre|november|December|сентября|November|February|mercredi|mittwoch|dimanche|dezember|décembre|Saturday|августа|janvier|samstag|пятница|суббота|декабря|octubre|freitag|вторник|juillet|viernes|Tuesday|sonntag|février|febrero|октября|oktober|October|January|февраля|octobre|domingo|четверг|februar|Sunday|января|montag|august|agosto|апреля|Friday|August|Monday|ноября|jueves|martes|januar|samedi|sábado|mardi|March|enero|jeudi|среда|nachm|junio|april|julio|abril|avril|lundi|lunes|марта|April|июля|juil|mayo|juni|févr|July|нояб|февр|sept|janv|June|mars|juli|märz|vorm|июня|août|juin|сент|янв|авг|Wed|sáb|mär|Aug|aug|jan|Mon|ven|Nov|oct|okt|nov|dim|dic|Sat|мая|sep|Sun|Oct|abr|a.m|Tue|lun|mer|дек|Feb|vie|apr|Fri|Jun|mié|feb|jeu|Jul|Jan|окт|jun|jul|avr|jue|Dec|dez|Sep|Apr|sam|апр|p.m|Mar|ene|May|mar|may|Thu|mai|ago|dom|déc|do|чт|вт|пн|PM|pm|mo|mi|am|di|сб|пт|ср|fr|AM|so|sa|вс|gennaio|febbraio|marzo|luglio|agosto|settembre|ottobre|novembre|dicembre|' % DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE | re.IGNORECASE)
 TRANSLATION_DICT = {
@@ -162,32 +161,32 @@ TRANSLATION_DICT = {
     u'чт': u'Thu',
     u'янв': u'Jan',
     u'января': u'January',
-    u'miăšrcoles':'',
-    u'martedăź':'',
-    u'săąbado':'',
-    u'lunedăź':'',
-    u'giovedăź':'',
-    u'mercoledăź':'',
-    u'domenica':'',
-    'dicembre':'December',
-    'diciembre':'December',
-    'mi茅rcoles':'',
-    'venerdăź':'',
-    'gennaio':'January',
-    'luglio':'July',
-    'ottobre':'October',
-    'făšvrier':'February',
-    'febbraio':'February',
-    u'giugno':'June',
-    u'aprile':'April',
-    u'maggio':'May',
-    u'lunedì':'Monday',
-    u'martedì':'Tuesday',
-    u'mercoledì':'Wednesday',
-    u'giovedì':'Thursday',
-    u'venerdì':'Friday',
-    u'sabato':'Saturday',
-    u'Domenica':'Sunday'
+    u'miăšrcoles': '',
+    u'martedăź': '',
+    u'săąbado': '',
+    u'lunedăź': '',
+    u'giovedăź': '',
+    u'mercoledăź': '',
+    u'domenica': '',
+    'dicembre': 'December',
+    'diciembre': 'December',
+    'mi茅rcoles': '',
+    'venerdăź': '',
+    'gennaio': 'January',
+    'luglio': 'July',
+    'ottobre': 'October',
+    'făšvrier': 'February',
+    'febbraio': 'February',
+    u'giugno': 'June',
+    u'aprile': 'April',
+    u'maggio': 'May',
+    u'lunedì': 'Monday',
+    u'martedì': 'Tuesday',
+    u'mercoledì': 'Wednesday',
+    u'giovedì': 'Thursday',
+    u'venerdì': 'Friday',
+    u'sabato': 'Saturday',
+    u'Domenica': 'Sunday'
 
 }
 
@@ -200,24 +199,42 @@ def _generate_translation_dict(self_update=False):
 
     english_locale = PyICU.Locale('en_US')
     english_date_format = PyICU.DateFormatSymbols(english_locale)
-    get_func_names = filter(lambda name: re.match('^get[AMWS]\w+s$', name), dir(english_date_format))
+    get_func_names = filter(
+        lambda name: re.match(
+            '^get[AMWS]\w+s$',
+            name),
+        dir(english_date_format))
     for locale in 'ru_RU de_DE fr_FR es_ES'.split():
         this_locale = PyICU.Locale(locale)
         local_date_format = PyICU.DateFormatSymbols(this_locale)
         for func_name in get_func_names:
-            TRANSLATION_DICT.update(dict(zip(map(lambda word: word.lower().strip('.'), getattr(local_date_format, func_name)()), getattr(english_date_format, func_name)())))
+            TRANSLATION_DICT.update(dict(zip(map(lambda word: word.lower().strip('.'), getattr(
+                local_date_format, func_name)()), getattr(english_date_format, func_name)())))
     if '' in TRANSLATION_DICT:
         del TRANSLATION_DICT['']
     translation_dict_str = "TRANSLATION_DICT = {"
     for k, v in sorted(TRANSLATION_DICT.items()):
         translation_dict_str += "\n    u'%s': u'%s'," % (k, v)
     translation_dict_str = translation_dict_str.strip(',') + '}'
-    datetime_regex_str = u"DATETIME_VALIDATION_REGEX = re.compile(u'%%s|at|%s' %% DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE | re.IGNORECASE)" % '|'.join(sorted(set(TRANSLATION_DICT.keys() + TRANSLATION_DICT.values()), cmp=lambda a, b: cmp(len(b), len(a))))
+    datetime_regex_str = u"DATETIME_VALIDATION_REGEX = re.compile(u'%%s|at|%s' %% DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE | re.IGNORECASE)" % '|'.join(
+        sorted(set(TRANSLATION_DICT.keys() + TRANSLATION_DICT.values()), cmp=lambda a, b: cmp(len(b), len(a))))
     if self_update:
-        this_file_data = unicode(''.join(open(__file__).readlines()), encoding='utf-8')
-        this_file_data = re.sub(u'TRANSLATION_DICT = {[^}]*}', translation_dict_str, this_file_data, 1)
-        this_file_data = re.sub(u'DATETIME_VALIDATION_REGEX = re.compile\(.*?, re.UNICODE\)', datetime_regex_str, this_file_data, 1)
-        temp_file_name = '%s.new' % __file__  # using temp file is a bit paranoid, I know
+        this_file_data = unicode(
+            ''.join(
+                open(__file__).readlines()),
+            encoding='utf-8')
+        this_file_data = re.sub(
+            u'TRANSLATION_DICT = {[^}]*}',
+            translation_dict_str,
+            this_file_data,
+            1)
+        this_file_data = re.sub(
+            u'DATETIME_VALIDATION_REGEX = re.compile\(.*?, re.UNICODE\)',
+            datetime_regex_str,
+            this_file_data,
+            1)
+        # using temp file is a bit paranoid, I know
+        temp_file_name = '%s.new' % __file__
         temp_file = open(temp_file_name, 'w')
         temp_file.write(this_file_data.encode('utf-8'))
         temp_file.close()
@@ -231,38 +248,59 @@ def _prepare_date_string(possible_date):
     If so, prepare the string for parsing."""
     if not isinstance(possible_date, unicode):
         possible_date = possible_date.decode('utf-8', 'ignore')
-    possible_date = re.sub(r'<[^>]*?>|&#\d+;', ' ', possible_date)  # strip all html tags
+    possible_date = re.sub(
+        r'<[^>]*?>|&#\d+;',
+        ' ',
+        possible_date)  # strip all html tags
     possible_date = re.sub(re.compile(u'\s+', re.UNICODE), u' ', possible_date)
     possible_date = re.sub(re.compile(u'\W+$', re.UNICODE), '', possible_date)
     if 5 <= len(possible_date) <= 50:
-        possible_date = re.sub(re.compile('posted on|at|by', re.IGNORECASE), '', possible_date)
-        if possible_date and not DATETIME_VALIDATION_REGEX.sub('', possible_date):
+        possible_date = re.sub(
+            re.compile(
+                'posted on|at|by',
+                re.IGNORECASE),
+            '',
+            possible_date)
+        if possible_date and not DATETIME_VALIDATION_REGEX.sub(
+                '', possible_date):
             return possible_date
     return None
 
 
-def parse(date_string, force_parse=False, force_update=False, loglevel=logging.ERROR):
+def parse(
+        date_string,
+        force_parse=False,
+        force_update=False,
+        loglevel=logging.ERROR):
     """Got date_string -- free form locale specific date sting
     Output: datetime.datetime object or None"""
     # let's setup logger
-    date_string=date_string.lower()
-    date_string=date_string
+    date_string = date_string.lower()
+    date_string = date_string
     logger = logging.getLogger('date_parser')
     logger.setLevel(loglevel)
     logger.manager.emittedNoHandlerWarning = True
     # let's start the work at last
     date_string = _prepare_date_string(date_string)
     if not date_string:
-	print(date_string)
+        print(date_string)
         # the given string does not looks like string with date
         return None
-    date_invalid_symbol = re.compile(u'[^%s\w]' % DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE)
+    date_invalid_symbol = re.compile(
+        u'[^%s\w]' %
+        DATETIME_VALID_NONCHAR_SYMBOLS,
+        re.UNICODE)
     #non_english_word = re.compile(u'[^%sa-zA-Z]+' % DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE)
-    non_english_word = re.compile(u'[^%s]+' % DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE)
+    non_english_word = re.compile(
+        u'[^%s]+' %
+        DATETIME_VALID_NONCHAR_SYMBOLS,
+        re.UNICODE)
     if not TRANSLATION_DICT or force_update:
         _generate_translation_dict(self_update=force_update)
     if date_invalid_symbol.search(date_string):
-        logger.debug('we have unexpected symbols "%s" into the date_string "%s"' % (date_invalid_symbol.search(date_string).group(), date_string))
+        logger.debug(
+            'we have unexpected symbols "%s" into the date_string "%s"' %
+            (date_invalid_symbol.search(date_string).group(), date_string))
         if force_parse:
             logger.debug('drop all unexpected symbols out')
             date_string = date_invalid_symbol.sub('', date_string)
@@ -278,16 +316,23 @@ def parse(date_string, force_parse=False, force_update=False, loglevel=logging.E
             # let's try to translate this text to English
             for word in non_english_word.findall(date_string):
                 if word.lower() not in TRANSLATION_DICT:
-                    logger.warning('cannot translate word "%s" into the string "%s"' % (word, date_string))
+                    logger.warning(
+                        'cannot translate word "%s" into the string "%s"' %
+                        (word, date_string))
                     return None
-                date_string = date_string.replace(word, TRANSLATION_DICT[word.lower()])
-            logger.debug('date_string has been translated to "%s"' % date_string)
+                date_string = date_string.replace(
+                    word, TRANSLATION_DICT[word.lower()])
+            logger.debug(
+                'date_string has been translated to "%s"' %
+                date_string)
             try:
                 # second shot
                 return dateutil.parser.parse(date_string)
-            except Exception, e:
+            except Exception as e:
                 # bad luck
-                logger.warning('cannot translate date_string "%s": %s' % (date_string, repr(e)))
+                logger.warning(
+                    'cannot translate date_string "%s": %s' %
+                    (date_string, repr(e)))
         return None
 
 
@@ -295,10 +340,17 @@ if __name__ == '__main__':
     from optparse import OptionParser
 
     logging.basicConfig()
-    parser = OptionParser(usage="%prog [-f] [-q] <free-form date string>", version=str(__version__))
-    parser.add_option("-f", "--force-update",
-                      action='store_true', dest="force_update", default=False,
-                      help="force self-updating of TRANSLATION_DICT in this file", metavar="FILE")
+    parser = OptionParser(
+        usage="%prog [-f] [-q] <free-form date string>",
+        version=str(__version__))
+    parser.add_option(
+        "-f",
+        "--force-update",
+        action='store_true',
+        dest="force_update",
+        default=False,
+        help="force self-updating of TRANSLATION_DICT in this file",
+        metavar="FILE")
     parser.add_option("-q", "--quiet",
                       action="store_false", dest="verbose", default=True,
                       help="don't print debug messages to stdout")
