@@ -11,9 +11,6 @@ action='edit_rules') %}
 
 <form class="dataset-form dataset-resource-form form-horizontal" method="post" action="{{ action }}" data-module="basic-form resource-form">
 
-
-
-
 {% block primary_content %}
   <article class="module prose">
     {% block page_header %}
@@ -38,63 +35,97 @@ action='edit_rules') %}
     {% endblock %}
     {% block primary_content_inner %}
     
- {% block block1 %}
-	  {% call form.select('Select Rules Category', id='harmonise_category_selection', label=_('Select Rules Category '), options=[{ "value": "categories_values", "text": "Categories Values" },{ "value": "categories_labels", "text": "Categories Labels" },
-          { "value": "dates", "text": "Dates" },  {'value':'formats', 'text':'File Formats'}, {'value':'licenses', 'text':'Licenses'}], selected=data.harmonise_category_selection, error=errors.harmonise_category_selection) %} 
-
+    {% block block1 %}
+        {% call form.select('Select Rules Category', id='harmonise_category_selection', label=_('Select Rules Category '), 
+            options=[
+                { "value": "categories_values", "text": "Category Values" },
+                { "value": "categories_labels", "text": "Category Labels" },
+                { "value": "dates", "text": "Dates" },  
+                {'value':'formats', 'text':'File Formats'}, 
+                {'value':'licenses', 'text':'Licenses'}], 
+            selected=data.harmonise_category_selection, error=errors.harmonise_category_selection) %} 
         {% endcall %}
-  
-    {% call form.select('catalogue_selection', id='catalogue_selection', label=_('Catalogue'), options=h.harmonisation_sources_rules_list(), selected=data.catalogue_selection, error=errors.catalogue_selection) %} 
-            <button class="btn" name="rules" value="view-rules" type="submit" >{{ _('View Mappings') }}</button>
-        {% endcall %}
-        
-    
-<table class="table table-striped table-bordered table-condensed">
-  <colgroup>
-    <col width="55">
-    <col width="85">
-  </colgroup>
 
-  {%for key in data['new_formats_mappings']%}
+        {# 
+    <div class="control-groups">
+    {% set error = errors.catalogue_selection %}
+        <label class="control-label" for="field-license">{{ _("Catalogue") }}</label>
+        <div class="controls">
+          <select id="catalogue_selection" name="catalogue_selection" data-module="autocomplete">
+             {% for catalogue_id in h.harmonisation_cat_list(['All catalogues'])|reverse %}
+              <option value="{{ catalogue_id }}" {% if data.get('catalogue_selection', 'notspecified') == catalogue_id %} selected="selected" {% endif %}>{{ catalogue_id }}</option>
+            {% endfor %}
+          </select>
+        </div>
+    </div>
+  #}
 
+    {% block form_actions %}
+      <div class="form-actions" style="display:block;">
+          <button class="btn pull-left" value='view-rules' type="submit" name="rules">
+              {#    {% block save_button_text %} #}
+              {{ _('View Mappings') }}
+              {# {% endblock %} #}
+          </button>
+      </div>
+      <br>
+    {% endblock %}
 
+    <h3 class="hide-heading">{{ _('Details') }}</h3>
+  
+    <div class="row">
+        <div class="panel-group" id="accordion">
+            {% set list_loop_counter = [0] %}
+            {% for key_user,val_user in data['new_formats_mappings'].iteritems() %}
+                  <div class="panel panel-default">
+                     <div class="panel-heading">
+                       <h4 class="panel-title">
+                           <a data-toggle="collapse" data-parent="#accordion" href="#collapse__{{ loop.index0 }}">
+                               {{ key_user }} 
+                         </a>
+                       </h4>
+                     </div>
+                     <div id="collapse__{{ loop.index0 }}" class= {% if loop.index0==0 %} "panel-collapse collapse in" {% else %} "panel-collapse collapse" {% endif %}>
+                        <div class="panel-body">
+                            <table class="table table-striped table-bordered table-condensed">
+                              <colgroup>
+                                <col width="55">
+                                <col width="85">
+                              </colgroup>
+                              {% for k_cat,v_cat in val_user.iteritems() %} 
+                                {% if v_cat|length > 0 %}
+                                    <h4 class="heading"> {{ k_cat }} </h4>
+                                    {% for key in v_cat %}
+                                        {% set inner_index = list_loop_counter[0] + loop.index0 %}
+                                        {% set prefix = 'mappings__%d__' % (inner_index) %}
+                                          <input type="hidden" value="{{ k_cat }}" name="{{ prefix }}cat_url" />
+                                          <input type="hidden" value="{{ key_user }}" name="{{ prefix }}user" />
+                                            {{ form.custom(
+                                            names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
+                                             id='field-newkey'+'-'+key,
+                                             label=_('Mapping'),
+                                             values=(h.harmonisation_unescape_key(key,"(dot)"), v_cat[key], deleted),
+                                             error='')
+                                            }}
+                                        
+                                        {% if loop.last and list_loop_counter.append(list_loop_counter.pop() + loop.index) %}
+                                        {% endif %}
 
+                                    {% endfor %}
+                                {% endif %}
+                              {% endfor %}
+                            </table>
+                        </div>
+                     </div>
+                  </div>
+            {% endfor %}
+        </div>
+    </div>
   
-    {{ form.custom(
-     names=('new_key', 'new_value', 'custom_deleted'+'-'+key),
-     id='field-newkey'+'-'+key,
-     label=_('Mapping'),
-     values=(key, data['new_formats_mappings'][key],deleted),
-     error='')
-     
-	}}
-    
-  {%endfor%}
-  
-    
-  
-     
-  
-  
-</table>
-        
-{% endblock %}
-
-
-    
+    {% endblock %}
     {% endblock %}
   </article>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
 
 
   {% block stages %}
@@ -106,21 +137,10 @@ action='edit_rules') %}
 
   {{ form.errors(error_summary) }}
 
-  
-
-
-
-   
-
   <div class="form-actions">
      
       <button class="btn btn-primary" name="remove-and-save" value="editrules-complete" type="submit">{{ _('Remove Selected / Add Rest') }}</button>
      
   </div>
-
-
-
-
-
 
 </form>

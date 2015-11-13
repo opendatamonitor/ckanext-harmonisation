@@ -37,37 +37,29 @@ action='main_dashboard') %}
     <br></br>
     
     {% block primary_content_inner %}
+        <div class="control-groups">
+            {% set error = errors.catalogue_selection %}
+            <label class="control-label" for="field-license">{{ _("Catalogue") }}</label>
+            <div class="controls">
+              <select id="catalogue_selection" name="catalogue_selection" data-module="autocomplete">
+                 {% for catalogue_id in h.harmonisation_cat_list()|reverse %}
+                  <option value="{{ catalogue_id }}" {% if data.get('catalogue_selection', 'notspecified') == catalogue_id %} selected="selected" {% endif %}>{{ catalogue_id }}</option>
+                {% endfor %}
+              </select>
+            </div>
+        </div>      
+        <br></br>  
     
 	  {% block block1 %}
-	  {% call form.select('catalogue_selection', id='catalogue_selection', label=_('Catalogue'), options=h.harmonisation_sources_list(), selected=data.catalogue_selection, error=errors.catalogue_selection) %} 
-	  
-	  {% endcall %}
-       
-      
-       
-	 {# {{ form.input('category', id='field-last-modified', label=_('Category'), value=data.category,error=errors.category, classes=[]) }} #}
-	 
-	{# {% call form.select('category_selection', id='category_selection', label=_('Category'), options=[{ "value": "dates", "text": "Dates" },{ "value": "resources", "text": "Resources" },
-	 { "value": "licenses", "text": "Licenses" },{ "value": "languages", "text": "Languages" },{ "value": "categories", "text": "Categories" },
-            {'value':'countries', 'text':'Countries'}], selected=data.category_selection, error=errors.catalogue_selection) %} 
-  
-	{% endcall %}#}
-	
-<button class="btn" name="info" value="get-catalogue-info" type="submit" >{{ _('View Info') }}</button>
-
+        <button class="btn" name="info" value="get-catalogue-info" type="submit" >{{ _('View Info') }}</button>
 
 	  {% endblock %}
-	  
 	  
 	<br></br>  
 	  
 	  
 	  
 <br></br>
-
-
-
-
 
 
 	  <h3 class="hide-heading">{{ _('Details') }}</h3>
@@ -109,8 +101,8 @@ action='main_dashboard') %}
 	  <th>{{ _('Harmonised resources:') }}</th>
 	  <td><b>{{data.harmonised_resources}} {{" - "}}{{data.harmonised_resources_date}}</b>
 	  <ul>
-		<li>{{data.message_HarmoniseFormats}}</li><li>{{data.message_HarmoniseBadFormats}}</li>
-		<li>{{data.message_HarmoniseSizes}}</li><li>{{data.message_HarmoniseMimetypes}}</li><li>{{data.message_HarmoniseNumTagsAndResources}}</li></td>
+		<li>{{data.message_HarmoniseFormats}}</li>
+		<li>{{data.message_HarmoniseNumTagsAndResources}}</li></td>
 	  </ul>
 	</tr>
 	<tr>
@@ -120,14 +112,7 @@ action='main_dashboard') %}
 		<li>{{data.message_HarmoniseLicenses}} </li></td>
 	  </ul>
 	</tr>
-	<tr>
-	  <th>{{ _('Harmonised languages:') }}</th>
 	
-	  <td><b>{{data.harmonised_languages}} {{" - "}}{{data.harmonised_languages_date}}</b>
-	  <ul>
-	    <li>{{data.message_HarmoniseLanguageLabels}}</li><li>{{data.message_HarmoniseLanguages}}</li></td>
-	  </ul>
-	</tr>
 	<tr>
 	  <th>{{ _('Harmonised categories:') }}</th>
 	  
@@ -137,10 +122,7 @@ action='main_dashboard') %}
 	  </ul>
 	</tr>
 	
-	<tr>
-	  <th>{{ _('Harmonised countries:') }}</th>
-	  <td><b>{{data.harmonised_countries}} {{" - "}}{{data.harmonised_countries_date}}</b></td>
-	</tr>
+	
 	{%endif%}
 	<tr>
 	  <th>{{ _('Harmonisation Status:') }}</th>
@@ -180,27 +162,25 @@ action='main_dashboard') %}
                 <td><input type=checkbox name=licenses value="licenses_selected"></td>
             </tr>
             
-             <tr>
+	    <tr>
                 
                 <td>4</td>
-                <td>Languages</td>
-                <td><input type=checkbox name=languages value="languages_selected"></td>
-            </tr>
-            
-             <tr>
-                
-                <td>5</td>
                 <td>Categories</td>
                 <td><input type=checkbox name=categories value="categories_selected"></td>
             </tr>
-            
-            
+
+
              <tr>
                 
-                <td>6</td>
-                <td>Countries</td>
-                <td><input type=checkbox name=countries value="countries_selected"></td>
+                <td>5</td>
+                <td>De_duplication</td>
+                <td><input type=checkbox name=deduplication value="deduplication_selected"></td>
             </tr>
+            
+             
+            
+            
+            
        {# {% endfor %} #}
     </table>
     
@@ -224,17 +204,23 @@ action='main_dashboard') %}
   
 
 {%if user=='admin'%}
+    {%if data.status!='harmonisation started'%}
+        <div class="form-actions">
+          <button class="btn btn-danger" name="unharmonise" value="unharmonise-catalogue" type="unharmonise" >{{ _('Unharmonise Catalogue') }}</button>
+          <button class="btn btn-primary" name="save" value="go-harmonisation-complete" type="submit">{{ _('Harmonise Catalogue') }}</button>
+        </div>
+    {%endif%}
 
-   {%if data.status!='harmonisation started'%}
-
-  <div class="form-actions">
-	  <button class="btn btn-danger" name="unharmonise" value="unharmonise-catalogue" type="unharmonise" >{{ _('Unharmonise Catalogue') }}</button>
-      <button class="btn btn-primary" name="save" value="go-harmonisation-complete" type="submit">{{ _('Harmonise Catalogue') }}</button>
-     
-  </div>
-
-{%endif%}
-
+{%else%}
+    {%if data.status!='harmonisation started'%}
+        <div class="form-actions">
+          <button class="btn btn-danger" name="unharmonise" value="unharmonise-catalogue" type="unharmonise" disabled>{{ _('Unharmonise Catalogue') }}</button>
+          <button class="btn btn-primary" name="save" value="go-harmonisation-complete" type="submit" disabled>{{ _('Harmonise Catalogue') }}</button>
+          <p class="control-required-message">
+            <span class="control-required">*</span> {{ _("Login as admin to enable") }}
+          </p>
+        </div>
+    {%endif%}
 {%endif%}
 
 

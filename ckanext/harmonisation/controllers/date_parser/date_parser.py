@@ -21,8 +21,8 @@ import re
 
 
 
-DATETIME_VALID_NONCHAR_SYMBOLS = u'\-|\—|\+|\/|\s|\d|\:|\,|\.'
-DATETIME_VALIDATION_REGEX = re.compile(u'%s|venerdì|lunedì|martedì|mercoledì|giovedì|sabato|domenica|mi茅rcoles|aprile|giugno|făšvrier|ottobre|maggio|luglio|gennaio|venerdăź|diciembre|dicembre|miăšrcoles|martedăź|săąbado|lunedăź|mercoledăź|giovedăź|at|понедельник|воскресенье|septiembre|donnerstag|september|diciembre|miércoles|September|Wednesday|noviembre|septembre|Thursday|dienstag|vendredi|novembre|november|December|сентября|November|February|mercredi|mittwoch|dimanche|dezember|décembre|Saturday|августа|janvier|samstag|пятница|суббота|декабря|octubre|freitag|вторник|juillet|viernes|Tuesday|sonntag|février|febrero|октября|oktober|October|January|февраля|octobre|domingo|четверг|februar|Sunday|января|montag|august|agosto|апреля|Friday|August|Monday|ноября|jueves|martes|januar|samedi|sábado|mardi|March|enero|jeudi|среда|nachm|junio|april|julio|abril|avril|lundi|lunes|марта|April|июля|juil|mayo|juni|févr|July|нояб|февр|sept|janv|June|mars|juli|märz|vorm|июня|août|juin|сент|янв|авг|Wed|sáb|mär|Aug|aug|jan|Mon|ven|Nov|oct|okt|nov|dim|dic|Sat|мая|sep|Sun|Oct|abr|a.m|Tue|lun|mer|дек|Feb|vie|apr|Fri|Jun|mié|feb|jeu|Jul|Jan|окт|jun|jul|avr|jue|Dec|dez|Sep|Apr|sam|апр|p.m|Mar|ene|May|mar|may|Thu|mai|ago|dom|déc|do|чт|вт|пн|PM|pm|mo|mi|am|di|сб|пт|ср|fr|AM|so|sa|вс|gennaio|febbraio|marzo|luglio|agosto|settembre|ottobre|novembre|dicembre|' % DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE | re.IGNORECASE)
+DATETIME_VALID_NONCHAR_SYMBOLS = u'\-|\—|\+|\/|\s|\d|\:|\,|\.|T|Z'
+DATETIME_VALIDATION_REGEX = re.compile(u'%s|gennaio|febbraio|marzo|luglio|agosto|settembre|ottobre|novembre|dicembre|venerdì|lunedì|martedì|mercoledì|giovedì|sabato|domenica|mi茅rcoles|aprile|giugno|făšvrier|ottobre|maggio|luglio|gennaio|venerdăź|diciembre|dicembre|miăšrcoles|martedăź|săąbado|lunedăź|mercoledăź|giovedăź|at|понедельник|воскресенье|septiembre|donnerstag|september|diciembre|miércoles|September|Wednesday|noviembre|septembre|Thursday|dienstag|vendredi|novembre|november|December|сентября|November|February|mercredi|mittwoch|dimanche|dezember|décembre|Saturday|августа|janvier|samstag|пятница|суббота|декабря|octubre|freitag|вторник|juillet|viernes|Tuesday|sonntag|février|febrero|октября|oktober|October|January|февраля|octobre|domingo|четверг|februar|Sunday|января|montag|august|agosto|апреля|Friday|August|Monday|ноября|jueves|martes|januar|samedi|sábado|mardi|March|enero|jeudi|среда|nachm|junio|april|julio|abril|avril|lundi|lunes|марта|April|июля|juil|mayo|juni|févr|July|нояб|февр|sept|janv|June|mars|juli|märz|vorm|июня|août|juin|сент|янв|авг|Wed|sáb|mär|Aug|aug|jan|Mon|ven|Nov|oct|okt|nov|dim|dic|Sat|мая|sep|Sun|Oct|abr|a.m|Tue|lun|mer|дек|Feb|vie|apr|Fri|Jun|mié|feb|jeu|Jul|Jan|окт|jun|jul|avr|jue|Dec|dez|Sep|Apr|sam|апр|p.m|Mar|ene|May|mar|may|Thu|mai|ago|dom|déc|do|чт|вт|пн|PM|pm|mo|mi|am|di|сб|пт|ср|fr|AM|so|sa|вс|' % DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE | re.IGNORECASE)
 TRANSLATION_DICT = {
     u'a.m': u'AM',
     u'abr': u'Apr',
@@ -253,7 +253,6 @@ def parse(date_string, force_parse=False, force_update=False, loglevel=logging.E
     # let's start the work at last
     date_string = _prepare_date_string(date_string)
     if not date_string:
-	print(date_string)
         # the given string does not looks like string with date
         return None
     date_invalid_symbol = re.compile(u'[^%s\w]' % DATETIME_VALID_NONCHAR_SYMBOLS, re.UNICODE)
@@ -270,6 +269,9 @@ def parse(date_string, force_parse=False, force_update=False, loglevel=logging.E
             logger.debug('no force, so just return None')
             return None
     try:
+# remove Z from the end of string when the time is in TZ
+        if date_string[-1] == 'z':
+            date_string = date_string[:-1]
         # first shot
         return dateutil.parser.parse(date_string)
     except Exception:

@@ -1,0 +1,109 @@
+{% import 'macros/form.html' as form %}
+
+
+{% set data = data or {} %}
+{% set errors = errors or {} %}
+{#{% set action = form_action or h.url_for(controller='ckanext.harmonisation.controllers.package:CustomHarmonisationController',
+    action='read_data_', id=pkg_name) %}
+    #}
+{% set action = h.url_for(controller='ckanext.harmonisation.controllers.package:CustomHarmonisationController',
+action='monitor') %}
+
+<form class="dataset-form dataset-resource-form form-horizontal" method="post" action="{{ action }}" data-module="basic-form resource-form">
+
+
+	{% block primary_content %}
+	  <article class="module prose">
+		{% block page_header %}
+
+	{% endblock %}
+    <br></br>
+    
+    {% block primary_content_inner %}
+    {%if user==True%}
+<!--   options select   -->
+    {% call form.select('gathered', id='gathered', label=_('Gather Stage'), options=[{ "value": "All", "text": "All" },{ "value": "Gather stage finished", "text": "Gather stage finished" },
+            {'value':'Gather stage failed', 'text':'Gather stage failed'}], selected=data.gathered_selection, error=errors.gathered_selection) %} 
+	  {% endcall %}
+	  
+	{% call form.select('fetched', id='fetched', label=_('Fetch Stage'), options=[{ "value": "All", "text": "All" },{ "value": "Fetched", "text": "Fetched" },
+            {'value':'Not Yet', 'text':'Not Yet'}], selected=data.fetched_selection, error=errors.fetched_selection) %} 
+	  {% endcall %}
+	  
+	{% call form.select('harmonised', id='harmonised', label=_('Harmonisation'), options=[{ "value": "All", "text": "All" },{ "value": "Harmonisation finished", "text": "Harmonisation finished" },
+            {'value':'Harmonisation started', 'text':'Harmonisation started'},{'value':'Harmonisation pending', 'text':'Harmonisation pending'}], selected=data.harmonised_selection, error=errors.harmonised_selection) %} 
+	 <button class="btn" name="monitor_info" value="get-monitor-info" type="submit" >{{ _('Monitor') }}</button>
+	 {% endcall %}
+	  
+
+
+	  <h3 class="hide-heading">{{ _('Details') }}</h3>
+  <table class="table table-striped table-bordered table-condensed">
+	<colgroup>
+	  <col width="100">
+	  <col width="70">
+	  <col width="80">
+	  <col width="70">
+	  <col width="70">
+	  <col width="80">
+	  
+	</colgroup>
+	<tr>
+	  <th>{{ _('Catalogue') }}</th>
+	  <th>{{ _('Platform') }}</th>
+	  <th><font color="green">{{ _('Gathered')}}</font><font color="3366CC"> {{('/Last Gathered') }}</font></th>
+	  <th>{{ _('New') }}</th>
+	  <th>{{ _('Updated') }}</th>
+	  <th>{{ _('Status') }}</th>
+	  
+	</tr>
+
+{%for json in data%}
+	<tr>
+	  <td>{{ json.title }}</td>
+	  <td>{{ json.type }}</td>
+	  <td><font color="green">{{ json.gathered }}</font><font color="3366CC">{{' / '}}{{ json.last_gathered }}</td>
+	  <td><font color="green">{{ json.new }}</font><font color="3366CC">{{' / '}}{{ json.last_new }}</td>
+	  <td><font color="green">{{ json.updated }}</font><font color="3366CC">{{' / '}}{{ json.last_updated }}</td>
+	   {%if 'harmonised' not in json.keys()%}
+	  <td><font color="FF0033">{{"not yet" }}</font></td>
+	  {%endif%}
+	  {%if json.harmonised=='started'%}
+	  <td><font color="3366CC">{{json.harmonised }}</font></td>
+	  {%endif%}
+	  {%if json.harmonised=='finished'%}
+	  <td><font color="green">{{json.harmonised }}</font></td>
+	  {%endif%}
+	  
+	  
+	</tr>
+{%endfor%}
+
+  </table>
+    
+   
+    {%endif%}
+    
+    {% endblock %}
+  </article>
+{% endblock %}
+
+
+
+
+  {% block stages %}
+    {# An empty stages variable will not show the stages #}
+    {% if stage %}
+      {{ h.snippet('package/snippets/stages.html', stages=stage, pkg_name=pkg_name) }}
+    {% endif %}
+  {% endblock %}
+
+  {{ form.errors(error_summary) }}
+
+  
+
+
+
+
+</form>
+

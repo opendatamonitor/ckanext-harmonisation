@@ -1,0 +1,70 @@
+{#
+Adds a block of custom form fields.
+
+extras - The fields to add.
+errors - A dict of errors for the fields.
+limit  - The total number of fields that should be output.
+Example:
+
+  {% snippet 'snippets/custom_form_fields.html', data = data, dropdown_list = custom_dropdown_list, extras=data.extras, errors=errors, limit=3 %}
+
+#}
+{% import "macros/form.html" as form %}
+
+<div data-module="custom-fields">
+  {% for extra in extras %}
+    {% set prefix = 'extras__%d__' % (loop.index0) %}
+    {{ form.custom(
+      names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
+      id='field-extras-%d' % loop.index,
+      label=_('Custom Field'),
+      values=(extra.key, extra.value, extra.deleted),
+      error=errors[prefix ~ 'key'] or errors[prefix ~ 'value']
+    ) }}
+  {% endfor %}
+
+  {# Add a max of 3 empty columns #}
+  {% set total_extras = extras|count %}
+  {% set empty_extras = (limit or 3) - total_extras %}
+  {% if empty_extras <= 0 %}{% set empty_extras = 1 %}{% endif %}
+
+  {% for extra in range(total_extras, total_extras + empty_extras) %}
+    {% set index = loop.index0 + (extras|count) %}
+    {% set prefix = 'extras__%d__' % (index) %}
+        <div class="control-group control-custom">
+            <label class="control-label" for="unharmonised_key"> {{ _('New Mapping') }}</label>
+          <div class="controls editor">
+            <div class="input-prepend" >
+                <label for="field-extras-{{ index }}" class="add-on">Key</label>
+                <input list="existing_fields" id="field-key-{{ index }}" type="text" name="{{ prefix }}key" value="" />
+                <datalist id="existing_fields">
+                    {% for key in data['raw_attrs']|sort %}
+                        <option value="{{ key }}">
+                    {% endfor %}
+                </datalist>
+
+                <label for="field-extras-{{ index }}" class="add-on">Value</label>
+                <select id="field-value-{{ index }}" name="{{ prefix }}value">
+                    <option selected disabled value=''>Select a mapping</option>
+                    {% for drop_list in dropdown_list[data['Select Rules Category']] %}
+                        <option value="{{ drop_list }}"{% if drop_list == selected %} selected{% endif %}>{{ drop_list }}</option>
+                    {% endfor %}
+                </select>
+                 <!-- <label class="checkbox" for="field&#45;unharmonised&#45;add"> -->
+                 <!--   <input type="checkbox" id="field&#45;unharmonised&#45;add" name="unharmonised_checkbox"/> <span>{{ _('Add') }}</span> -->
+                 <!-- </label> -->
+            </div>
+          </div>
+        </div>
+
+        {# 
+    {{ form.custom(
+      names=(prefix ~ 'key', prefix ~ 'value', prefix ~ 'deleted'),
+      id='field-extras-%d' % index,
+      label=_('New Mapping'),
+      values=(extra.key, extra.value, extra.deleted),
+      error=errors[prefix ~ 'key'] or errors[prefix ~ 'value']
+    ) }}
+    #}
+  {% endfor %}
+</div>

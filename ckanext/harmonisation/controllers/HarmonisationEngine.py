@@ -23,10 +23,18 @@ from country_bounding_boxes import (
         )
 
 import lepl.apps.rfc3696
-import custom_logging
 import logging
-import configparser 
+import configparser
 import dictionaries
+
+# import custom_logging
+from custom_logging import Logger
+import resourcelinks
+#import deduplication as dedup
+# to check for specific char diff, e.g. cc-by and cc by diff in '-' in pos 2
+from string_diff import comp
+from bson.objectid import ObjectId
+
 MaxDocsInDB=400000
 
 ##read from development.ini file all the required parameters
@@ -39,6 +47,9 @@ harmonisation_engine_log=str(log_path)+'harmonisation_engine/harmonisation_engin
 
 client1=pymongo.MongoClient(str(mongoclient), int(mongoport))
 db=client1.odm
+
+## used in resources and deduplication functions
+coll = 'odm_harmonised'
 
 text_file = open(str(harmonisation_engine_log), "w")
 #the collection we ll store all datasets
@@ -67,16 +78,23 @@ dates_dict_user=db.dates_dict_user
 def Copy_Odm_to_Odm_harmonised(cat_url):
   text_file.write(str(datetime.now())+' - harmonisation_engine - Harmonisation_engine process started.'+'\n')
   counter=0
+  counter1=0
   #the collection we wanna copy datasets
   odm_collection=db.odm
   #the collection we ll store all new datasets
   odm_harmonised_collection=db.odm_harmonised
 
+  all_docs = {}
+  documents=odm_harmonised_collection.find({"catalogue_url":cat_url})
+  for doc in documents:
+      all_docs[str(doc['_id'])] = doc
+
+  # obj_ids = [ObjectId("543555af9daf0977c126c932"),ObjectId("543556789daf0977c126c9c3"),ObjectId("543557f19daf0977c126cac8"),ObjectId("543558f59daf0977c126cb87")]
+  # datasets=list(odm_collection.find({'catalogue_url':cat_url,'_id':{'$in':obj_ids}}))
   datasets=list(odm_collection.find({'catalogue_url':cat_url}));
   print(str(len(datasets)))
   i=0
   while i<len(datasets):
-
 	if 'copied' not in datasets[i].keys():
 		datasets[i].update({"copied":True})
 		odm_harmonised_collection.save(datasets[i])
@@ -84,19 +102,103 @@ def Copy_Odm_to_Odm_harmonised(cat_url):
 		counter+=1
 
 	if 'copied' in datasets[i].keys() and 'updated_dataset' in datasets[i].keys():
-		temp_id=datasets[i]['id']
-		document=odm_harmonised_collection.find_one({"id":temp_id})
-		if len(document.keys())>1:
-		  odm_harmonised_collection.remove({"id":temp_id})
-		odm_harmonised_collection.save(datasets[i])
 		del datasets[i]['updated_dataset']
 		odm_collection.save(datasets[i])
-		counter+=1
+
+                if 'deleted_dataset' in datasets[i] and datasets[i]['deleted_dataset'] == True:
+                    i+=1
+                    continue
+
+		# temp_id=datasets[i]['id']
+		# document=odm_harmonised_collection.find_one({"id":temp_id,"catalogue_url":cat_url})
+                try:
+		        document = all_docs[str(datasets[i]['_id'])]
+			datasets[i].update({'updated_dataset':True})
+			if document!=None and len(document.keys())>1:
+			  if 'is_duplicate' in document.keys():
+				is_dup=document['is_duplicate']
+				datasets[i].update({'is_duplicate':is_dup})
+			  if 'duplicates' in document.keys():
+				dupls=document['duplicates']
+				datasets[i].update({'duplicates':dupls})
+		          if 'attrs_counter' in document:
+		              datasets[i]['attrs_counter'] = document['attrs_counter']
+			  if 'resources' in document.keys() and 'resources' in datasets[i].keys():
+				resources=document['resources']
+		                odm_resources = datasets[i]['resources']
+				j=0
+				while j<len(resources):
+					if 'status_code' in resources[j].keys():
+						status_code_temp=resources[j]['status_code']
+						url_temp=resources[j]['url']
+						k=0
+						while k<len(odm_resources):
+							if  'url' in datasets[i]['resources'][k].keys() and url_temp==datasets[i]['resources'][k]['url']:
+								datasets[i]['resources'][k].update({"status_code":status_code_temp})
+								if 'file_hash' in resources[j].keys() and resources[j]['file_hash']!="":
+									datasets[i]['resources'][k].update({"file_hash":resources[j]['file_hash']})
+								if 'file_size' in resources[j].keys() and resources[j]['file_size']!="":
+									datasets[i]['resources'][k].update({"file_size":resources[j]['file_size']})
+								if 'file_name' in resources[j]:
+									datasets[i]['resources'][k].update({"file_name":resources[j]['file_name']})
+								if 'size' in resources[j] and resources[j]['size'] and \
+		                                                        (('size' in odm_resources[k] and not odm_resources[k]['size']) or 'size' not in odm_resources[k]):
+									datasets[i]['resources'][k].update({"size":resources[j]['size']})
+								if 'mimetype' in resources[j] and resources[j]['mimetype'] and \
+		                                                        (('mimetype' in odm_resources[k] and not odm_resources[k]['mimetype']) or 'mimetype' not in odm_resources[k]):
+									datasets[i]['resources'][k].update({"mimetype":resources[j]['mimetype']})
+								if 'format' in resources[j] and resources[j]['format'] and \
+		                                                        ( ('format' in odm_resources[k] and not odm_resources[k]['format']) or 'format' not in odm_resources[k] ):
+									datasets[i]['resources'][k].update({"format":resources[j]['format']})
+		                                                break
+							k+=1
+					j+=1
+			  #odm_harmonised_collection.remove({"id":temp_id,"catalogue_url":cat_url})
+			  datasets[i].update({"_id":document["_id"]})
+			odm_harmonised_collection.save(datasets[i])
+			counter1+=1
+		## case of double reharvesting and never harmonised.
+                except KeyError:    
+                	datasets[i].update({"copied":True})
+			odm_harmonised_collection.save(datasets[i])
+			odm_collection.save(datasets[i])
+			counter+=1      
 	i+=1
   print(str(counter)+" new datasets found and sent to harmonisation engine.")
+  print(str(counter1)+" updated datasets found and sent to harmonisation engine.")
   message='There are: '+str(counter)+' new unharmonised datasets found.'+'\n'
   text_file.write(str(datetime.now())+' - harmonisation_engine - '+' There are: '+str(counter)+' new unharmonised datasets found.'+'\n')
+  RemoveDeletedDatasets(cat_url)
   return message
+
+
+def RemoveDeletedDatasets(cat_url):
+  counter=0
+  del_counter=0
+  deleted_datasets_ids=[]
+  #the collection we wanna copy datasets
+  odm_collection=db.odm
+  #the collection we ll store all new datasets
+  odm_harmonised_collection=db.odm_harmonised
+
+  datasets=list(odm_collection.find({'catalogue_url':cat_url}));
+  i=0
+  while i<len(datasets):
+
+	if 'deleted_dataset' in datasets[i].keys():
+		deleted_datasets_ids.append(datasets[i]['id'])
+		counter+=1
+
+	i+=1
+  print(str(counter)+" deleted datasets found and will be removed from odm_harmonised db.")
+
+  odm_harmonised_collection.remove({"id":{"$in":deleted_datasets_ids},"catalogue_url":cat_url})
+
+
+  print(str(del_counter)+"  datasets successfully removed from odm_harmonised.")
+
+
+
 
 def delete_harmonised(cat_url):
   i=0
@@ -104,8 +206,9 @@ def delete_harmonised(cat_url):
   datasets=list(collection.find({'catalogue_url':cat_url}))
   while i<len(datasets):
 	try:
-		del datasets[i]['harmonised']
-		collection.save(datasets[i])
+		if datasets[i]['harmonised']==True :
+			del datasets[i]['harmonised']
+			collection.save(datasets[i])
 	except:pass
 	i+=1
 
@@ -120,7 +223,6 @@ def HarmoniseTags(cat_url):
   point=0
   datasets=list(collection.find({'catalogue_url':cat_url}))
   while i<len(datasets):
-
 
 	  if 'harmonised' not in datasets[i].keys():
 		datasets[i].update({'harmonised':{}})
@@ -155,7 +257,7 @@ def HarmoniseTags(cat_url):
 
 	  else:
 		i+=1
-	
+
 
 
   print("Tags harmonised in "+str(counter)+ " datasets")
@@ -233,7 +335,7 @@ def HarmoniseExtras(cat_url):
 				datasets[i].update({"extras":extrasjson2})
 				collection.save(datasets[i])
 				counter+=1
-			
+
 			datasets[i]['harmonised'].update({'harmonised_extras':True})
 			datasets[i]['harmonised'].update({'harmonised_extras_date':datetime.now()})
 			collection.save(datasets[i])
@@ -332,16 +434,14 @@ def HarmoniseDatesLabels(cat_url):
   while count<len(dates_dictionary):
 	key=dates_dictionary.keys()[count]
 	if '(dot)' in key:
-	  #print(key)
 	  key1=key.replace('(dot)','.')
-	  #print(key1)
 	  dates_dictionary.update({key1:dates_dictionary[str(dates_dictionary.keys()[count])]})
 	  del dates_dictionary[key]
 	count+=1
   datemappings_keys=dates_dictionary.keys()
   datemappings=dates_dictionary
 
-  
+
   counter_broken_links=0
   counter=0
   #datemappings=dates_dict.dates_dict
@@ -404,7 +504,7 @@ def HarmoniseReleaseDates(cat_url):
   bad_date=""
   counter_broken_links=0
   c=0
- 
+
   datasets=list(collection.find({'catalogue_url':cat_url}))
   i=0
 
@@ -455,7 +555,7 @@ def HarmoniseReleaseDates(cat_url):
 				  datasets[i]['harmonised'].update({'harmonised_ReleaseDates':True})
 				  datasets[i]['harmonised'].update({'harmonised_ReleaseDates_date':datetime.now()})
 				  collection.save(datasets[i])
-				  
+
 
 			  except AttributeError:
 				i=i
@@ -482,7 +582,7 @@ def HarmoniseUpdateDates(cat_url):
   counter1=0
   bad_date=""
   counter_broken_links=0
-  
+
   datasets=list(collection.find({'catalogue_url':cat_url}))
   i=0
 
@@ -595,7 +695,7 @@ def HarmoniseMetadataCreated(cat_url):
 	  i+=1
 
   datasets[:]=[]
-  
+
   print("Harmonised metadata_created  in "+str(counter)+" datasets")
   text_file.write(str(datetime.now())+' - harmonisation_engine - '+" Harmonised metadata_created in: "+str(counter)+ " datasets"+'\n')
   message="Harmonised metadata_created in: "+str(counter)+ " datasets"+'\n'
@@ -640,11 +740,30 @@ def HarmoniseMetadataModified(cat_url):
 			  counter+=1
 			except:
 			  pass
-
+	  if "metadata_updated" in datasets[i].keys():
+		  metadata_updated=datasets[i]['metadata_updated']
+		  try:
+			metadata_updated1=parser.parse(metadata_updated)
+			datasets[i].update({"metadata_updated":metadata_updated1})
+			#datasets[i]['harmonised'].update({'harmonised_MetadataModified':True})
+			#datasets[i]['harmonised'].update({'harmonised_MetadataModified_date':datetime.now()})
+			collection.save(datasets[i])
+			#counter+=1
+		  except:
+			try:
+			  metadata_updated=metadata_updated.replace('_','.')
+			  metadata_updated1=parser.parse(metadata_updated)
+			  datasets[i].update({"metadata_updated":metadata_updated1})
+			  #datasets[i]['harmonised'].update({'harmonised_MetadataModified':True})
+			  #datasets[i]['harmonised'].update({'harmonised_MetadataModified_date':datetime.now()})
+			  collection.save(datasets[i])
+			 #counter+=1
+			except:
+			  pass
 	  i+=1
-  
+
   datasets[:]=[]
-  
+
   print("Harmonised metadata_modified in "+str(counter)+" datasets")
   text_file.write(str(datetime.now())+' - harmonisation_engine - '+" Harmonised metadata_modified in: "+str(counter)+ " datasets"+'\n')
   message="Harmonised metadata_modified in: "+str(counter)+ " datasets"+'\n'
@@ -686,7 +805,7 @@ def HarmoniseFormats(cat_url):
 	formats_dictionary.update({formats_dictionary3.keys()[i]:formats_dictionary3[formats_dictionary3.keys()[i]]})
 	i+=1
 
-  
+
   count=0
   while count<len(formats_dictionary):
 	key=formats_dictionary.keys()[count]
@@ -698,19 +817,25 @@ def HarmoniseFormats(cat_url):
 	  del formats_dictionary[key]
 	count+=1
   keys=formats_dictionary.keys()
-  
+  keys_lower=[]
+  p=0
+  while p<len(keys):
+	keys_lower.append(keys[p].lower())
+	p+=1
+  #print(keys_lower)
   #print(keys)
   dictionary=str(formats_dictionary).lower()
   #print(dictionary)
 
   i=0
   counter=0
-  
+
   unharmonised_formats=[]
-  
+
   datasets=list(collection.find({'catalogue_url':cat_url}))
 
   while i<len(datasets):
+	#print(i)
 	if 'harmonised' not in datasets[i].keys():
 	  datasets[i].update({'harmonised':{}})
 	  collection.save(datasets[i])
@@ -719,42 +844,60 @@ def HarmoniseFormats(cat_url):
 		  resources=datasets[i]['resources']
 		  j=0
 		  while j<len(resources):
-			k=0
-			while k<len(keys):
-			  try:
-				  format_normal=datasets[i]['resources'][j]['format'].encode('utf-8')
-			  except UnicodeDecodeError:
-				  format_normal=datasets[i]['resources'][j]['format']
-			  try:
-				  format_lower_strip=datasets[i]['resources'][j]['format'].encode('utf-8').lower().strip()
-			  except UnicodeDecodeError:
-				  format_lower_strip=datasets[i]['resources'][j]['format'].lower().strip()
-			  if str(format_lower_strip)!=str(format_normal):
-				datasets[i]['resources'][j].update({"format":str(format_lower_strip)})
-				datasets[i]['harmonised'].update({'harmonised_Formats':True})
-				datasets[i]['harmonised'].update({'harmonised_Formats_date':datetime.now()})
-				collection.save(datasets[i])
-			  try:
-				  format1=datasets[i]['resources'][j]['format'].encode('utf-8')
-			  except UnicodeDecodeError:
-				  format1=datasets[i]['resources'][j]['format']
-			  if str(format1)==keys[k] or str(format1)==keys[k].lower() :
+			#k=0
+			#while k<len(keys):
+			  if datasets[i]['resources'][j]['format']!=None:
+				  try:
+					  format_normal=datasets[i]['resources'][j]['format'].encode('utf-8')
+				  except UnicodeDecodeError:
+					  format_normal=datasets[i]['resources'][j]['format']
+				  try:
+					  format_lower_strip=datasets[i]['resources'][j]['format'].encode('utf-8').lower().strip()
+				  except UnicodeDecodeError:
+					  format_lower_strip=datasets[i]['resources'][j]['format'].lower().strip()
+				  if str(format_lower_strip)!=str(format_normal):
+					datasets[i]['resources'][j].update({"format":str(format_lower_strip)})
+					datasets[i]['harmonised'].update({'harmonised_Formats':True})
+					datasets[i]['harmonised'].update({'harmonised_Formats_date':datetime.now()})
+					collection.save(datasets[i])
+				  try:
+					  format1=datasets[i]['resources'][j]['format'].encode('utf-8')
+				  except UnicodeDecodeError:
+					  format1=datasets[i]['resources'][j]['format']
+				  #if str(format1)==keys[k] or str(format1)==keys[k].lower() :
+				  if str(format1) in keys or str(format1) in keys_lower :
 
-				  datasets[i]['resources'][j].update({"format":str(formats_dictionary[str(keys[k])])})
-				  datasets[i]['harmonised'].update({'harmonised_Formats':True})
-				  datasets[i]['harmonised'].update({'harmonised_Formats_date':datetime.now()})
-				  collection.save(datasets[i])
-				  counter+=1
-			  else:
-				  if str(format1).lower() not in dictionary:
-					  if format1 not in unharmonised_formats:
-						  unharmonised_formats.append(format1)
+					  k=0
+					  while k<len(keys):
+						if str(format1)==keys[k] or str(format1)==keys_lower[k]:
+							datasets[i]['resources'][j].update({"format":str(formats_dictionary[str(keys[k])])})
+							datasets[i]['harmonised'].update({'harmonised_Formats':True})
+							datasets[i]['harmonised'].update({'harmonised_Formats_date':datetime.now()})
+							collection.save(datasets[i])
+							counter+=1
+							break
+						k+=1
+					  #datasets[i]['resources'][j].update({"format":str(formats_dictionary[str(keys[k])])})
+					  #datasets[i]['harmonised'].update({'harmonised_Formats':True})
+					  #datasets[i]['harmonised'].update({'harmonised_Formats_date':datetime.now()})
+					  #collection.save(datasets[i])
+					  #counter+=1
+				  else:
+					  if str(format1).lower() not in dictionary:
+						  datasets[i]['resources'][j].update({"format":"unknown"})
+					  	  datasets[i]['harmonised'].update({'harmonised_Formats':True})
+					  	  datasets[i]['harmonised'].update({'harmonised_Formats_date':datetime.now()})
+					  	  collection.save(datasets[i])
+					  	  counter+=1
+						  if format1 not in unharmonised_formats:
+							  unharmonised_formats.append(format1)
 
-			  k+=1
 
-			k=0
+			  #k+=1
 
-			j+=1
+			#k=0
+
+			  j+=1
 
 		  j=0
 		  i+=1
@@ -801,16 +944,14 @@ def HarmoniseBadFormats(cat_url):
   i=0
   while i<len(formats_dictionary3):
 	formats_dictionary.update({formats_dictionary3.keys()[i]:formats_dictionary3[formats_dictionary3.keys()[i]]})
-	i+=1  
-  
-  
+	i+=1
+
+
   count=0
   while count<len(formats_dictionary):
 	key=formats_dictionary.keys()[count]
 	if '(dot)' in key:
-	  #print(key)
 	  key1=key.replace('(dot)','.')
-	  #print(key1)
 	  formats_dictionary.update({key1:formats_dictionary[str(formats_dictionary.keys()[count])]})
 	  del formats_dictionary[key]
 	  count-=1
@@ -825,7 +966,8 @@ def HarmoniseBadFormats(cat_url):
   good_links_formats=[]
   err=0
 
-
+  datasets=[]
+  datasets[:]=[]
   datasets=list(collection.find({'catalogue_url':cat_url}))
 
   while i<len(datasets):
@@ -836,6 +978,7 @@ def HarmoniseBadFormats(cat_url):
 		try:
 		  resources=datasets[i]['resources']
 
+
 		  j=0
 
 		  while j<len(resources):
@@ -845,15 +988,17 @@ def HarmoniseBadFormats(cat_url):
 			try:
 			  url1=datasets[i]['resources'][j]['url']
 			except IndexError:
-			  i+=1
-			  j=0
+			  url1=None
+			  #i+=1
+			  #j=0
 
 			try:
 			  format1=datasets[i]['resources'][j]['format']
 			except IndexError:
-			  i+=1
-			  j=0
-			if (str(format1.encode('utf-8')) not in keys or str(format1.encode('utf-8')).lower() not in keys) and (', ' in str(format1.encode('utf-8')) or '(' in str(format1.encode('utf-8'))) or format1=="" :
+			  format1=None
+			  #i+=1
+			  #j=0
+			if format1!=None and((str(format1.encode('utf-8')) not in keys or str(format1.encode('utf-8')).lower() not in keys) and (', ' in str(format1.encode('utf-8')) or '(' in str(format1.encode('utf-8'))) or format1=="") and url1!=None :
 
 				format_find=FindFormat.FindFormat(url1)
 
@@ -869,46 +1014,46 @@ def HarmoniseBadFormats(cat_url):
 
 				else:
 
-				  if 'http:' in url1 or 'www.' in url1:
-					try:
-					  r  = requests.get(url1)
-					except:
-					  print('url error')
-					  break
+				 # if 'http:' in url1 or 'www.' in url1:
+					#try:
+					 # r  = requests.get(url1)
+					#except:
+					  #print('url error')
+					  #break
 
-					data = r.text
-					soup = BeautifulSoup(data)
-					links= soup.find_all('a')
+					#data = r.text
+					#soup = BeautifulSoup(data)
+					#links= soup.find_all('a')
 
-					l=0
+					#l=0
 
-					while l<len(links):
-					  link =links[l].get('href')
-					  if link!="":
-						good_links_formats.append(link)
-					  if link!="" and link!=None:
-						link_format=FindFormat.FindFormat(link)
+					#while l<len(links):
+					  #link =links[l].get('href')
+					  #if link!="":
+						#good_links_formats.append(link)
+					  #if link!="" and link!=None:
+					#	link_format=FindFormat.FindFormat(link)
 
-						if link_format!="" and link_format!=None and link_format!="html":
-						  try:
-							f=urllib2.urlopen(link,timeout=1)
-							filesize=f.headers["Content-Length"]
-							mimetype=f.headers["Content-Type"]
+					#	if link_format!="" and link_format!=None and link_format!="html":
+					#	  try:
+					#		f=urllib2.urlopen(link,timeout=1)
+					#		filesize=f.headers["Content-Length"]
+					#		mimetype=f.headers["Content-Type"]
 
-							resource_json={"url":str(link),"format":str(link_format).lower(),"mimetype":str(mimetype),"size":str(filesize)}
-							resources_json.append(resource_json)
-						  except  urllib2.HTTPError,urllib2.URLError:
-							  filesize=""
-						  except socket.timeout as e:
-							  pass
-							  # print('timeout')
-						  except TypeError:
-							  filesize=""
-
-						  except:
-							  filesize=""
-
-					  l+=1
+#							resource_json={"url":str(link),"format":str(link_format).lower(),"mimetype":str(mimetype),"size":str(filesize)}
+#							resources_json.append(resource_json)
+#						  except  urllib2.HTTPError,urllib2.URLError:
+#							  filesize=""
+#						  except socket.timeout as e:
+#							  pass
+#							  print('timeout')
+#						  except TypeError:
+#							  filesize=""
+#
+#						  except:
+#							  filesize=""
+#
+#					  l+=1
 
 
 				  if len(good_links_formats) == 0:
@@ -918,31 +1063,35 @@ def HarmoniseBadFormats(cat_url):
 
 						m=0
 						while m<len(formats):
-
-						  resource_json={"url":str(url1.encode('utf-8')),"format":str(formats[m]).lower()}
-						  resources_json.append(resource_json)
+						  try:
+							  resource_json={"url":str(url1.encode('utf-8')),"format":str(formats[m]).lower()}
+							  resources_json.append(resource_json)
+						  except:pass
 
 						  m+=1
 						m=0
 				  if len(resources_json)>0:
-					datasets[i].update({"resources":resources_json})
-					datasets[i].update({"num_resources":len(resources_json)})
-					datasets[i]['harmonised'].update({'harmonised_BadFormats':True})
-					datasets[i]['harmonised'].update({'harmonised_BadFormats_date':datetime.now()})
-					collection.save(datasets[i])
+					try:
+						datasets[i].update({"resources":resources_json})
+						datasets[i].update({"num_resources":len(resources_json)})
+						datasets[i]['harmonised'].update({'harmonised_BadFormats':True})
+						datasets[i]['harmonised'].update({'harmonised_BadFormats_date':datetime.now()})
+						collection.save(datasets[i])
 
-					counter+=1
-					resources_json[:]=[]
+						counter+=1
+						resources_json[:]=[]
+					except:pass
 
 
 			j+=1
 
 		  j=0
-		  i+=1
+		  #i+=1
 
 		except KeyError:
-		  i+=1
-	else:i+=1
+		  pass
+	#else:i+=1
+	i+=1
 
   datasets[:]=[]
   print("harmonised bad formats in "+str(counter)+ " resources.")
@@ -979,16 +1128,15 @@ def HarmoniseSizes(cat_url):
 			  if resource_size==None and datasets[i]['resources'][j]['format']!='HTML' and datasets[i]['resources'][j]['format']!='' and datasets[i]['resources'][j]['format']!=None:
 
 				try:
-				 # print(datasets[i]['resources'][j]['url'])
 				  f=urllib2.urlopen(datasets[i]['resources'][j]['url'], timeout = 1)
 				  filesize=f.headers["Content-Length"]
-				 # print('filezise: '+filesize)
+
 				  mimetype=f.headers["Content-Type"]
 				  datasets[i]['resources'][j].update({"size":str(filesize)})
 
 				  if datasets[i]['resources'][j]['format']==None:
 					datasets[i]['resources'][j].update({"mimetype":str(mimetype)})
-				  
+
 				  datasets[i]['harmonised'].update({'harmonised_Sizes':True})
 				  datasets[i]['harmonised'].update({'harmonised_Sizes_date':datetime.now()})
 				  collection.save(datasets[i])
@@ -997,11 +1145,9 @@ def HarmoniseSizes(cat_url):
 
 				except  urllib2.HTTPError,urllib2.URLError:
 				  filesize=""
-				  #print('Url Error')
 				  counter_broken_links+=1
 				except socket.timeout as e:
 				  pass
-				  # print('timeout')
 				except:
 				  filesize=""
 
@@ -1027,10 +1173,10 @@ def HarmoniseSizes(cat_url):
 
 ## Harmonise mimetypes
 def HarmoniseMimetypes(cat_url):
-  
+
   counter=0
   counter_broken_links=0
-  
+
   datasets=list(collection.find({'catalogue_url':cat_url}))
   i=0
 
@@ -1054,7 +1200,6 @@ def HarmoniseMimetypes(cat_url):
 
 
 				  f=urllib2.urlopen(datasets[i]['resources'][j]['url'],timeout=1)
-				  #print(datasets[i]['resources'][j]['url'])
 				  mimetype=f.headers["Content-Type"]
 				  datasets[i]['resources'][j].update({"mimetype":str(mimetype)})
 				  datasets[i]['harmonised'].update({'harmonised_Mimetypes':True})
@@ -1068,7 +1213,6 @@ def HarmoniseMimetypes(cat_url):
 				  counter_broken_links+=1
 				except socket.timeout as e:
 				  pass
-				  # print('timeout')
 				except:
 				  filesize=""
 				  counter_broken_links+=1
@@ -1092,13 +1236,13 @@ def HarmoniseMimetypes(cat_url):
 
 ## Harmonise num tags and num resources
 def HarmoniseNumTagsAndResources(cat_url):
- 
+
   counter=0
   datasets=list(collection.find({'catalogue_url':cat_url}))
   i=0
 
   while i<len(datasets):
-	
+
 	if 'harmonised' not in datasets[i].keys():
 	  datasets[i].update({'harmonised':{}})
 	  collection.save(datasets[i])
@@ -1404,10 +1548,30 @@ def HarmonisePlatform():
 
 
 
+def check_in_lic_values(license,stored_lic_values):
+# find license in values and cover cases where only difference is in (2nd pos, - char)
+    # tmp_license = None
+    # if 'license_id' in datasets[i] and datasets[i]['license_id'] not in ['',None]:
+    #     tmp_license = datasets[i]['license_id']
+    found = False
+    if license:
+        for index,val in enumerate(stored_lic_values):
+            del_diff,add_diff = comp(license.lower(),val.lower())
+            if (len(del_diff) == 1 and len(add_diff) == 1) and \
+                    ((del_diff[0]['pos'] == 2 and del_diff[0]['char'] == '-') or (add_diff[0]['pos'] == 3 and add_diff[0]['char'] == '-')):
+                # datasets[i]['license_id'] = license_values[index_val]
+                # print(license,val)
+                license = stored_lic_values[index]
+
+                found = True
+                break
+
+    return found,license
+
 
 ## Harmonise Licenses
 def HarmoniseLicenses(cat_url):
-  
+
   point=0
   counter=0
   counter2=0
@@ -1417,7 +1581,7 @@ def HarmoniseLicenses(cat_url):
   license2=""
 
   #from dictionaries import basic_licenses_dict
-  
+
   doc=collection1.find_one({"cat_url":cat_url})
   try:
   	user=doc['user']
@@ -1425,46 +1589,49 @@ def HarmoniseLicenses(cat_url):
 	user=''
   #licenses_dictionary=licenses_dict.find_one({'cat_url':str(cat_url)})
   licenses_dictionary1=licenses_dict_basic.find_one()
+  #print(licenses_dictionary1)
   licenses_dictionary2=licenses_dict_user.find_one({'user':str(user)})
   if licenses_dictionary2==None:licenses_dictionary2={}
   licenses_dictionary3=licenses_dict_catalogue.find_one({'cat_url':str(cat_url)})
+
   licenses_dictionary={}
+  licenses_dictionary_temp={}
   i=0
   while i<len(licenses_dictionary1):
-	licenses_dictionary.update({licenses_dictionary1.keys()[i]:licenses_dictionary1[licenses_dictionary1.keys()[i]]})
+	licenses_dictionary_temp.update({licenses_dictionary1.keys()[i]:licenses_dictionary1[licenses_dictionary1.keys()[i]]})
 	i+=1
   i=0
   while i<len(licenses_dictionary2):
-	licenses_dictionary.update({licenses_dictionary2.keys()[i]:licenses_dictionary2[licenses_dictionary2.keys()[i]]})
+	licenses_dictionary_temp.update({licenses_dictionary2.keys()[i]:licenses_dictionary2[licenses_dictionary2.keys()[i]]})
 	i+=1
   i=0
   while i<len(licenses_dictionary3):
-	licenses_dictionary.update({licenses_dictionary3.keys()[i]:licenses_dictionary3[licenses_dictionary3.keys()[i]]})
+	licenses_dictionary_temp.update({licenses_dictionary3.keys()[i]:licenses_dictionary3[licenses_dictionary3.keys()[i]]})
 	i+=1
 
-  
   count=0
-  while count<len(licenses_dictionary):
-	key=licenses_dictionary.keys()[count]
-	#print(key)
+  while count<len(licenses_dictionary_temp):
+	key=licenses_dictionary_temp.keys()[count]
 	if '(dot)' in key:
-	  #print(key)
 	  key1=key.replace('(dot)','.')
-	  #print(key1)
-	  licenses_dictionary.update({key1:licenses_dictionary[key]})
-	  del licenses_dictionary[key]
-	  count-=1
+	  licenses_dictionary.update({key1:licenses_dictionary_temp[key]})
+	else:
+	  licenses_dictionary.update({key:licenses_dictionary_temp[key]})
 	count+=1
   keys=licenses_dictionary.keys()
-  
-  
-  #keys=basic_licenses_dict.licenses_dict.keys()
+
+
   dictionary=str(licenses_dictionary).lower()
   unharmonised_licenses=[]
 
   datasets=list(collection.find({'catalogue_url':cat_url}))
   i=0
 
+
+  # remove _id field
+  del licenses_dictionary['_id']
+  # get all values from license dictionary
+  license_values = licenses_dictionary.values()
 
   while i<len(datasets):
 	counter2+=1
@@ -1492,7 +1659,14 @@ def HarmoniseLicenses(cat_url):
 		  except KeyError:
 			license2=""
 
-		  if license!=""and license!=None and found==False:
+		  if "license_id" not in datasets[i].keys() and "license" in  datasets[i].keys():
+			datasets[i].update({"license_id":str(datasets[i]['license'])})
+			collection.save(datasets[i])
+			license=datasets[i]['license_id']
+
+		  if license!="" and license!=None and found==False:
+                          unmodified_lic = license
+
 			  try:
 				license=license.encode('utf-8')
 			  except:
@@ -1506,13 +1680,28 @@ def HarmoniseLicenses(cat_url):
 				  collection.save(datasets[i])
 				  found=True
 				  counter+=1
-				if str(license).lower().strip() not in dictionary:
 
-				  if str(license).lower().strip() not in unharmonised_licenses:
-					  unharmonised_licenses.append(str(license).lower().strip())
 				j+=1
 
-		  if license1!=""and license1!=None and found==False:
+                          if found == False:
+                            found,_lic = check_in_lic_values(unmodified_lic,license_values)
+                            if found:
+                                datasets[i]['license_id'] = _lic
+
+                                datasets[i]['harmonised'].update({'harmonised_Licenses':True})
+                                datasets[i]['harmonised'].update({'harmonised_Licenses_date':datetime.now()})
+                                collection.save(datasets[i])
+                                counter+=1
+
+                            if found == False and (unicode(license,'utf-8').lower().strip() not in licenses_dictionary):
+                                if unicode(license,'utf-8') not in licenses_dictionary.values():
+                                    if str(license).lower().strip() not in unharmonised_licenses:
+                                      unharmonised_licenses.append(str(license).lower().strip())
+
+
+		  if found==False and license1!="" and license1!=None:
+                          unmodified_lic = license1
+
 			  try:
 				license1=license1.encode('utf-8')
 			  except:
@@ -1527,14 +1716,28 @@ def HarmoniseLicenses(cat_url):
 				  collection.save(datasets[i])
 				  found=True
 				  counter+=1
-				if str(license1).lower().strip() not in dictionary:
-
-				  if str(license1).lower().strip() not in unharmonised_licenses:
-					  unharmonised_licenses.append(str(license1).lower().strip())
 
 				j+=1
 
-		  if license2!=""and license2!=None and found==False:
+                          if found == False:
+                            found,_lic = check_in_lic_values(unmodified_lic,license_values)
+                            if found:
+                                datasets[i]['license_id'] = _lic
+
+                                datasets[i]['harmonised'].update({'harmonised_Licenses':True})
+                                datasets[i]['harmonised'].update({'harmonised_Licenses_date':datetime.now()})
+                                collection.save(datasets[i])
+                                counter+=1
+
+                            if found == False and (unicode(license1,'utf-8').lower().strip() not in licenses_dictionary):
+                                if unicode(license1,'utf-8') not in licenses_dictionary.values():
+                                    if str(license1).lower().strip() not in unharmonised_licenses:
+                                      unharmonised_licenses.append(str(license1).lower().strip())
+
+
+		  if found==False and license2!="" and license2!=None:
+                          unmodified_lic = license2
+
 			  try:
 				license2=license2.encode('utf-8')
 			  except:
@@ -1548,11 +1751,23 @@ def HarmoniseLicenses(cat_url):
 				  collection.save(datasets[i])
 				  found=True
 				  counter+=1
-				if str(license2).lower().strip() not in dictionary:
 
-				  if str(license2).lower().strip() not in unharmonised_licenses:
-					  unharmonised_licenses.append(str(license2).lower().strip())
-				j+=1
+                                j+=1
+
+                          if found == False:
+                            found,_lic = check_in_lic_values(unmodified_lic,license_values)
+                            if found:
+                                datasets[i]['license_id'] = _lic
+
+                                datasets[i]['harmonised'].update({'harmonised_Licenses':True})
+                                datasets[i]['harmonised'].update({'harmonised_Licenses_date':datetime.now()})
+                                collection.save(datasets[i])
+                                counter+=1
+
+                            if found == False and (unicode(license2,'utf-8').lower().strip() not in licenses_dictionary):
+                                if unicode(license2,'utf-8') not in licenses_dictionary.values():
+                                    if str(license2).lower().strip() not in unharmonised_licenses:
+                                      unharmonised_licenses.append(str(license2).lower().strip())
 
 		  if "license_id" not in str(datasets[i]):
 
@@ -1655,7 +1870,7 @@ def HarmoniseLanguageLabels(cat_url):
 
 				k=0
 				j+=1
-				
+
 		  i+=1
 		except KeyError:
 		  i+=1
@@ -1672,7 +1887,7 @@ def HarmoniseLanguageLabels(cat_url):
 
 def HarmoniseLanguages(cat_url):
 
-  
+
   counter=0
   counter_broken_links=0
   from dictionaries import languages_dict
@@ -1744,20 +1959,18 @@ def HarmoniseCategoryLabels(cat_url):
   while i<len(categories_dictionary3):
 	categories_dictionary.update({categories_dictionary3.keys()[i]:categories_dictionary3[categories_dictionary3.keys()[i]]})
 	i+=1
-  
+
   count=0
   while count<len(categories_dictionary):
 	key=categories_dictionary.keys()[count]
 	if '(dot)' in key:
-	  #print(key)
 	  key1=key.replace('(dot)','.')
-	  #print(key1)
 	  categories_dictionary.update({key1:categories_dictionary[key]})
 	  del categories_dictionary[key]
 	  count-=1
 	count+=1
- 
-  
+
+
   categorymappings=categories_dictionary
   categorymappings_keys=categories_dictionary.keys()
 
@@ -1832,7 +2045,6 @@ def HarmoniseCategories(cat_url):
 		  c+=1
 		  found=False
 		  try:
-			#print(i)
 
 			try:
 			  category=datasets[i]['extras']['category'].replace('[','').replace(']','').replace('{','').replace('}','').replace('"','').replace('(','').replace(')','').replace('&',',').replace('quot ;','').replace('Quot;','')
@@ -1840,7 +2052,6 @@ def HarmoniseCategories(cat_url):
 			except:
 			  category=""
 
-			# print(category)
 			#counter+=1
 			try:
 			  language_detection = gs.detect(str(category))
@@ -2135,8 +2346,8 @@ def HarmoniseCountries(cat_url):
         more_datasets=True
 	db=collection
 	unharmonised_category_values=[]
-	custom_logging.setup_logger('log1', r'uncaught_categories.log')
-        logger = logging.getLogger('log1')
+	# custom_logging.setup_logger('log1', r'uncaught_categories.log')
+        # logger = logging.getLogger('log1')
         #geo=Geography(countries_table,cities_table)
 
         while(more_datasets):
@@ -2144,7 +2355,6 @@ def HarmoniseCountries(cat_url):
                 conn_delay=1
 
                 datasets=list(collection.find({'catalogue_url':cat_url}))
-		#print(datasets)
                 # datasets=db.find({'_id':ObjectId('53d0e67cce2e3b31d8149263')})
                 for dataset in datasets:
 		    if 'harmonised' not in dataset:
@@ -2163,27 +2373,8 @@ def HarmoniseCountries(cat_url):
 		                db.save(dataset)
 		            else:
 		                no_countriesNotFound=no_countriesNotFound+1
-		                
-		                
-		            #categories harmonization
-			    try:
-				    #categories harmonization
-				    if 'extras' in dataset.keys() and 'category' in dataset['extras'].keys():
-				        category,sub_category,non_empty=HarmoniseCategoryValues(cat_url,logger,dataset)
-				        if non_empty and category:
-				            db.update({'_id':dataset['_id']},{'$set':{'category':category,'sub_category':sub_category}})
-				        elif non_empty:
-				            # print('%s dataset with category \'%s\' is not harmonized' % (dataset['_id'],dataset['extras']['category']))
-				            no_categoriesNotHarmonized=no_categoriesNotHarmonized+1
-				            if 'category' in dataset['extras']:
-				                print('unharmonised:'+'\n'+str(dataset['extras']['category']))
-				    else:
-				        no_datasetWithoutCategory=no_datasetWithoutCategory+1
 
-			    except AttributeError as e:
-					#print(e,dataset)
-					if dataset['extras']['category'] not in unharmonised_category_values:
-					  unharmonised_category_values.append(dataset['extras']['category'])
+
 
 
 		            if (total_counter % 1000) == 0:
@@ -2212,34 +2403,128 @@ def HarmoniseCountries(cat_url):
 	return unharmonised_category_values
 
 
-def HarmoniseCategoryValues(cat_url,logger,dataset={}):
-        mapped_categories=[]
-        mapped_subcategories=[]
+
+
+
+def HarmoniseCategoryValues(cat_url):
+
+	no_countriesNotFound=0
+        no_categoriesNotHarmonized=0
+        no_datasetWithoutCategory=0
+        total_counter=0
+        conn_delay=1
+        more_datasets=True
+        message=""
+	# db=collection
+	unharmonised_category_values=[]
+	# custom_logging.setup_logger('log1', r'uncaught_categories.log')
+        # logger = logging.getLogger('log1')
+        #geo=Geography(countries_table,cities_table)
+
         #category_values=categories_values_dict.find_one({'cat_url':str(cat_url)})
         doc=collection1.find_one({"cat_url":cat_url})
 	try:
-        	user=doc['user']
+            user=doc['user']
 	except:
-		user=''
+            user=''
         categories_values_dictionary1=categories_values_dict_basic.find_one()
         categories_values_dictionary2=categories_values_dict_user.find_one({'user':str(user)})
         if categories_values_dictionary2==None:categories_values_dictionary2={}
         categories_values_dictionary3=categories_values_dict_catalogue.find_one({'cat_url':str(cat_url)})
+        if categories_values_dictionary3==None:categories_values_dictionary3={}
         category_values={}
         i=0
         while i<len(categories_values_dictionary1):
-        	category_values.update({categories_values_dictionary1.keys()[i]:categories_values_dictionary1[categories_values_dictionary1.keys()[i]]})
-        	i+=1
+            category_values.update({categories_values_dictionary1.keys()[i]:categories_values_dictionary1[categories_values_dictionary1.keys()[i]]})
+            i+=1
         i=0
         while i<len(categories_values_dictionary2):
-        	category_values.update({categories_values_dictionary2.keys()[i]:categories_values_dictionary2[categories_values_dictionary2.keys()[i]]})
-        	i+=1
+            category_values.update({categories_values_dictionary2.keys()[i]:categories_values_dictionary2[categories_values_dictionary2.keys()[i]]})
+            i+=1
         i=0
         while i<len(categories_values_dictionary3):
-        	category_values.update({categories_values_dictionary3.keys()[i]:categories_values_dictionary3[categories_values_dictionary3.keys()[i]]})
-        	i+=1
+            category_values.update({categories_values_dictionary3.keys()[i]:categories_values_dictionary3[categories_values_dictionary3.keys()[i]]})
+            i+=1
 
-        
+        category_groups = {}
+        #parse category_groups collection from db
+        category_groups=db.category_groups.find_one()
+
+
+        with Logger('log1', r'uncaught_categories.log'):
+            while(more_datasets):
+                try:
+                    conn_delay=1
+
+                    datasets=collection.find({'catalogue_url':cat_url})
+                    #print(datasets)
+                    # datasets=db.find({'_id':ObjectId('53d0e67cce2e3b31d8149263')})
+                    for dataset in datasets:
+                        if 'harmonised' not in dataset:
+                          dataset.update({'harmonised':{}})
+                          collection.save(dataset)
+                        #if 'harmonised_Countries' not in dataset['harmonised'].keys():
+                        total_counter=total_counter+1
+
+                        #categories harmonization
+                        try:
+                            #categories harmonization
+                            if 'extras' in dataset.keys() and 'category' in dataset['extras'].keys():
+                                category,sub_category,non_empty=CategoryValue(cat_url,category_values,category_groups,logging.getLogger('log1'),dataset)
+                                if non_empty and category:
+                                    db['odm_harmonised'].update({'_id':dataset['_id']},{'$set':{'category':category,'sub_category':sub_category}})
+                                elif non_empty:
+                                    # print('%s dataset with category \'%s\' is not harmonized' % (dataset['_id'],dataset['extras']['category']))
+                                    no_categoriesNotHarmonized=no_categoriesNotHarmonized+1
+                                    if 'category' in dataset['extras']:
+                                        print('unharmonised:'+'\n'+str(dataset['extras']['category']))
+                            else:
+                                no_datasetWithoutCategory=no_datasetWithoutCategory+1
+
+                        except AttributeError as e:
+                            #print(e,dataset)
+                            try:
+                                    if dataset['extras']['category'] not in unharmonised_category_values:
+                                      unharmonised_category_values.append(dataset['extras']['category'])
+
+                            except:pass
+
+                        if (total_counter % 10000) == 0:
+                            print ('%i datasets were parsed...' % total_counter)
+
+
+                    print('\n')
+                    print('=' * (len(cat_url)+11))
+                    print('Catalogue: %s' % cat_url)
+                    print('=' * (len(cat_url)+11))
+                    if no_categoriesNotHarmonized>0:
+                        print('%i datasets with category field are not harmonized' % no_categoriesNotHarmonized)
+                    if no_datasetWithoutCategory>0:
+                        print('%i datasets has no category field' % no_datasetWithoutCategory)
+                    if (total_counter % 10000) > 0:
+                        print ('%i datasets were parsed\n' % total_counter)
+
+                    more_datasets=False
+
+                except errors.AutoReconnect as e:
+                    print(e)
+                    time.sleep(conn_delay)
+                    conn_delay=conn_delay**2
+                    if(conn_delay>128):
+                        print('connection dropped because there could be some different error of what believed...')
+                        more_datasets=False
+                # finally:
+                #     del datasets
+
+        return unharmonised_category_values,message
+
+
+
+
+def CategoryValue(cat_url,category_values,category_groups,logger,dataset={}):
+        mapped_categories=[]
+        mapped_subcategories=[]
+
         count=0
         while count<len(category_values):
           key=category_values.keys()[count]
@@ -2267,10 +2552,10 @@ def HarmoniseCategoryValues(cat_url,logger,dataset={}):
                                 is_not_available=True
                             else:
                                 try:
-                                    mapped_categories.index(dictionaries.category_groups[group_id][0])
+                                    mapped_categories.index(category_groups[group_id][0])
                                 except ValueError:
-                                    mapped_categories.append(dictionaries.category_groups[group_id][0])
-                                    mapped_subcategories.append(dictionaries.category_groups[group_id][1])
+                                    mapped_categories.append(category_groups[group_id][0])
+                                    mapped_subcategories.append(category_groups[group_id][1])
                         except KeyError:
 				logger.warning('search term category:\'%s\'is not handled' % (a.lower().strip()))
 				#print('search term category:\'%s\'is not handled' % (a.lower().strip()))
@@ -2414,13 +2699,108 @@ def mails():
 		text_file_mails.write("'"+str(mail)+"',"+"'"+str(name)+"',"+"'"+str(cat_url)+"'"+'\n')
 
 
-			 
+
 		i+=1
 
 
 	point=endpoint
 	datasets[:]=[]
 
+
+def deduplicate_metadata(cat_url,all_datasets,job_id,conn,db='odm',coll='odm_harmonised'):
+    dups = dedup.DeDuplication()
+    partial_ordered_data = dups.parse_csv('partialOrder.csv')
+
+    client = conn[db][coll]
+    # results=client.find({'_id':ObjectId("55b372a59daf092e5e600e45")})
+    # results=client.find(limit=0,skip=60000,timeout=False)
+    # results=client.find({'$or':[{'is_duplicate':{'$exists':False}},{'is_duplicate':False}]},timeout=False)
+    if all_datasets:
+        results=client.find({'catalogue_url':cat_url},timeout=False).sort('_id',pymongo.ASCENDING)
+    else:
+        results=client.find({'catalogue_url':cat_url},timeout=False).sort('_id',pymongo.ASCENDING)
+
+    for result in results:
+        dups.prepare_data_for_indexing(result)
+    dups.index_data(conn,db)
+
+    counter = 0
+    with Logger('log1', r'partialOrdering.log'),Logger('log2', r'dup_errors.log'):
+        results.rewind()
+        for result in results:
+            dups.duplicates_check(result,conn,client,partial_ordered_data,
+                    logging.getLogger('log1'),logging.getLogger('log2'))
+
+            counter=counter+1
+            if (counter%10000)==0:
+                print('%i candidates checked so far...' % counter)
+    del results
+
+    # result = conn[db]['jobs'].update_one({'id':job_id},{'$set':{'harmonisation.deduplication':'finished'}})
+    # result = conn[db]['jobs'].update_one({'id':job_id},{'$set':{'harmonisation.deduplication_date':datetime.now()}})
+
+
+def resources_info(cat_url,all_datasets,job_id,conn,db='odm',coll='odm_harmonised'):
+    client = conn[db][coll]
+
+    total_counter=0
+    skip=0
+    conn_delay=1
+    more_datasets=True
+
+    resource_links = resourcelinks.Resources()
+
+    # regex=re.compile('open.nrw')
+
+    # custom_logging.setup_logger('log1', r'link_checking.log')
+    # logger = logging.getLogger('log1')
+    with Logger('log1', r'links.log'):
+        while(more_datasets):
+            try:
+                conn_delay=1
+
+                if all_datasets:
+                # datasets=client.find({'resources.status_code':{'$exists':False}},
+                #     timeout=False).sort('_id').skip(skip)
+                    datasets=client.find({'catalogue_url':cat_url},
+                        timeout=False).sort('_id').skip(skip)
+                else:
+                    datasets=client.find({'catalogue_url':cat_url},
+                        timeout=False).sort('_id').skip(skip)
+
+
+                # datasets.sort( '_id' ) # recommended to use time or other sequential parameter.
+                # datasets.skip( skip )
+
+                for dataset in datasets:
+                    total_counter+=1
+
+                    resource_links.get_link_info(dataset,client,logging.getLogger('log1'))
+
+                    if (total_counter % 10000) == 0:
+                        print ('%i datasets were parsed...' % total_counter)
+                        # raise errors.OperationFailure('cursor id blp blp not valid at server')
+
+                    skip += 1
+
+                more_datasets=False
+
+            except errors.OperationFailure as e:
+                msg = str(e)
+                if not ( msg.startswith( "cursor id" ) and msg.endswith( "not valid at server" ) ):
+                    raise
+                else:
+                    print(msg)
+                    print(skip)
+            except errors.AutoReconnect as e:
+                print(e)
+                time.sleep(conn_delay)
+                conn_delay=conn_delay**2
+                if(conn_delay>128):
+                    print('connection dropped because there could be some different error of what believed...')
+                    more_datasets=False
+            finally:
+                del datasets
 
 
 
@@ -2449,3 +2829,28 @@ def mails():
 ##IdentifyLanguageFromNotes()
 #FinishHarmonisationEngine()
 ##mails()
+#i=0
+
+def test():
+    cat_list = [
+        # "https://www.govdata.de/ckan/",
+        # "https://offenedaten.de/",
+        # "http://data.gov.gr/",
+        "http://data.gov.uk/",
+        ]
+
+# for job in db.jobs.find():
+# 	#print(i)
+# 	print(job['cat_url'])
+#         print('==============')
+# 	#RemoveDeletedDatasets(job['cat_url'])
+# 	#i+=1
+# 	HarmoniseLicenses(job['cat_url'])
+#RemoveDeletedDatasets('http://data.gov.ie/')
+
+    for cat in cat_list:
+        Copy_Odm_to_Odm_harmonised(cat)
+    #     HarmoniseLicenses(cat)
+
+if __name__=='__main__':
+    test()

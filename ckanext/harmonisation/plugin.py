@@ -20,7 +20,7 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.ITemplateHelpers)
    # p.implements(p.IFacets, inherit=True)
-  
+
 
     ## IDatasetForm
 
@@ -44,13 +44,13 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
 
     #def edit_template(self):
         #return 'source/edit.html'
-  
+
     def setup_template_variables(self, context, data_dict):
 
         #p.toolkit.c.harvest_source = p.toolkit.c.pkg_dict
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
- 
+
     def update_config(self, config):
         # check if new templates
         p.toolkit.add_template_directory(config, 'templates')
@@ -65,7 +65,11 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
         return {
                 #'package_list_for_source': harvest_helpers.package_list_for_source,
                 'harmonisation_sources_list':harmonisation_helpers.harmonisation_sources_list,
-                'harmonisation_sources_rules_list':harmonisation_helpers.harmonisation_sources_rules_list
+                'harmonisation_sources_rules_list':harmonisation_helpers.harmonisation_sources_rules_list,
+                'harmonisation_cat_list':harmonisation_helpers.cat_list,
+                'harmonisation_escape_key':harmonisation_helpers.escape_key,
+                'harmonisation_unescape_key':harmonisation_helpers.unescape_key,
+                'harmonisation_category_groups':harmonisation_helpers.get_category_groups,
                 #'harvesters_info': harvest_helpers.harvesters_info,
                 #'harvester_types': harvest_helpers.harvester_types,
                 #'harvest_frequencies': harvest_helpers.harvest_frequencies,
@@ -73,7 +77,7 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
                 #'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
                 }
 
- 
+
     ## IConfigurable interface ##
 
     def configure(self, config):
@@ -92,7 +96,7 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
 
         m.connect('view_rules', '/' + DATASET_TYPE_NAME + '/view_rules',
             controller = controller, action = 'view_rules')
-        
+
         m.connect('main_dashboard', '/' + DATASET_TYPE_NAME ,
             controller = controller, action = 'main_dashboard')
 
@@ -100,6 +104,8 @@ class Harmonisation(p.SingletonPlugin, tk.DefaultDatasetForm):
             controller = controller, action = 'edit_rules')
         #m.connect('/' + DATASET_TYPE_NAME + '/{controller}/{action}',
                             #controller = controller, action = 'read_data')
+        m.connect('odmmonitor', '/' + DATASET_TYPE_NAME + '/monitor',
+            controller = controller, action = 'monitor')
 
         m.connect('/' + DATASET_TYPE_NAME + '/{action}',
                 controller=controller,

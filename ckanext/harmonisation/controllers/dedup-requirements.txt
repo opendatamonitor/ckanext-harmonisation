@@ -1,0 +1,10 @@
+pymongo
+setuptools
+jellyfish
+whoosh
+#pysolr
+#pysolr dependencies
+#lxml
+#cssselect
+#python-dateutil
+termcolor

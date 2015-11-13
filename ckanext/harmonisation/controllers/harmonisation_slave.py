@@ -10,6 +10,7 @@ from dictionaries import basic_formats_dict
 from dictionaries import basic_licenses_dict
 from dictionaries import basic_category_values
 from dictionaries import basic_dates_dict
+from dictionaries import category_groups
 from datetime import datetime
 from ckan.lib.base import c
 
@@ -37,7 +38,7 @@ assert not log.disabled
 
 
 def slave():
-  
+
   ##databases init
   db = client.odm
   jobs=db.jobs
@@ -46,6 +47,7 @@ def slave():
   categories_dict_catalogue=db.categories_dict_catalogue
   categories_values_dict_basic=db.categories_values_dict_basic
   categories_values_dict_catalogue=db.categories_values_dict_catalogue
+  category_groups_dict_basic=db.category_groups
   dates_dict_basic=db.dates_dict_basic
   dates_dict_catalogue=db.dates_dict_catalogue
   licenses_dict_catalogue=db.licenses_dict_catalogue
@@ -57,16 +59,16 @@ def slave():
   unharmonised_licenses=db.unharmonised_licenses
   unharmonised_category_values_db=db.unharmonised_category_values
   print("Harmonisation slave. Waiting for harmonisation jobs...")
- 
+
 ##slave while
   while 1==1:
-	
-	if 1==1:
-	  
+
+	try:
+
 	  ## find harmonisation jobs
 	  harmonise_job=harmonise_jobs.find_one()
 	  catalogue_url=harmonise_job['cat_url']
-	  
+	  print(catalogue_url)
 
 ##create rules dictionaries / catalogue.
 
@@ -81,20 +83,20 @@ def slave():
 		  search_categories_dict.update({categories_dict.keys()[j]:categories_dict[categories_dict.keys()[j]]})
 		  categories_dict_basic.save(search_categories_dict)
 		  j+=1
-	  
+
 	  search_cat_categories=categories_dict_catalogue.find_one({'cat_url':str(catalogue_url)})
 	  if search_cat_categories==None:
 		cat_categories={}
 		cat_categories.update({'cat_url':str(catalogue_url)})
 		categories_dict_catalogue.save(cat_categories)
-		
-		
+
+
 	  #search_categories_dict=categories_dict.find_one({'cat_url':str(catalogue_url)})
 	  #if search_categories_dict==None:
 		#catalogue_categories_dict=basic_category_labels_dict.category_labels_dict
 		#catalogue_categories_dict.update({'cat_url':str(catalogue_url)})
 		#categories_dict.save(catalogue_categories_dict)
-		
+
 	  categories_values_dict=basic_category_values.category_values
 	  search_categories_values_dict=categories_values_dict_basic.find_one()
 	  if search_categories_values_dict==None:
@@ -105,7 +107,19 @@ def slave():
 		  search_categories_values_dict.update({categories_values_dict.keys()[j]:categories_values_dict[categories_values_dict.keys()[j]]})
 		  categories_values_dict_basic.save(search_categories_values_dict)
 		  j+=1
-	  
+
+	  category_groups_dict=category_groups.category_groups
+	  search_category_groups_dict=category_groups_dict_basic.find_one()
+	  if search_category_groups_dict==None:
+		category_groups_dict_basic.save(category_groups_dict)
+	  else:
+		j=0
+		while j<len(category_groups_dict.keys()):
+		  search_category_groups_dict.update({category_groups_dict.keys()[j]:category_groups_dict[category_groups_dict.keys()[j]]})
+		  category_groups_dict_basic.save(search_category_groups_dict)
+		  j+=1
+
+
 	  search_cat_categories_values=categories_values_dict_catalogue.find_one({'cat_url':str(catalogue_url)})
 	  if search_cat_categories_values==None:
 		cat_categories_values={}
@@ -128,7 +142,7 @@ def slave():
 		  search_dates_dict.update({dates_dict.keys()[j]:dates_dict[dates_dict.keys()[j]]})
 		  dates_dict_basic.save(search_dates_dict)
 		  j+=1
-	  
+
 	  search_cat_dates=dates_dict_catalogue.find_one({'cat_url':str(catalogue_url)})
 	  if search_cat_dates==None:
 		cat_dates={}
@@ -152,7 +166,7 @@ def slave():
 		  search_formats_dict.update({formats_dict.keys()[j]:formats_dict[formats_dict.keys()[j]]})
 		  formats_dict_basic.save(search_formats_dict)
 		  j+=1
-	  
+
 	  search_cat_formats=formats_dict_catalogue.find_one({'cat_url':str(catalogue_url)})
 	  if search_cat_formats==None:
 		cat_formats={}
@@ -175,7 +189,7 @@ def slave():
 		  search_licenses_dict.update({licenses_dict.keys()[j]:licenses_dict[licenses_dict.keys()[j]]})
 		  licenses_dict_basic.save(search_licenses_dict)
 		  j+=1
-	  
+
 	  search_cat_licenses=licenses_dict_catalogue.find_one({'cat_url':str(catalogue_url)})
 	  if search_cat_licenses==None:
 		cat_licenses={}
@@ -187,35 +201,34 @@ def slave():
 		#catalogue_licenses_dict=basic_licenses_dict.licenses_dict
 		#catalogue_licenses_dict.update({'cat_url':str(catalogue_url)})
 		#licenses_dict.save(catalogue_licenses_dict)
-	  
+
 	  try:
 		job=jobs.find_one({'id':harmonise_job['id']})
-		
+
 		if 'harmonisation' not in job.keys():
 		  job['harmonisation']={}
 		  jobs.save(job)
-		
 		job['harmonisation'].update({"harmonisation_status":"harmonisation started"})
 		jobs.save(job)
 	  except:pass
-	
+
 ## harmonise basics
 	  if 'harmonised' in harmonise_job.keys():
 		## update to jobs db
 		job=jobs.find_one({'id':harmonise_job['id']})
 		job.update({"harmonised":"started"})
 		jobs.save(job)
-		
-		
+
+
 		print('Harmonising Basics')
 		cat_url=harmonise_job['cat_url']
 		print(cat_url)
-		HarmonisationEngine.delete_harmonised(cat_url)
 		message_Copy_Odm_to_Odm_harmonised=HarmonisationEngine.Copy_Odm_to_Odm_harmonised(cat_url)
+		HarmonisationEngine.delete_harmonised(cat_url)
 		message_HarmoniseTags=HarmonisationEngine.HarmoniseTags(cat_url)
 		message_HarmoniseExtras=HarmonisationEngine.HarmoniseExtras(cat_url)
 		message_HarmoniseStringsToIntegers=HarmonisationEngine.HarmoniseStringsToIntegers(cat_url)
-		
+
 		## update to jobs db
 		job=jobs.find_one({'id':harmonise_job['id']})
 		job['harmonisation'].update({"message_Copy_Odm_to_Odm_harmonised":str(message_Copy_Odm_to_Odm_harmonised)})
@@ -239,7 +252,7 @@ def slave():
 		message_HarmoniseUpdateDates=HarmonisationEngine.HarmoniseUpdateDates(cat_url)
 		message_HarmoniseMetadataCreated=HarmonisationEngine.HarmoniseMetadataCreated(cat_url)
 		message_HarmoniseMetadataModified=HarmonisationEngine.HarmoniseMetadataModified(cat_url)
-		
+
 	  ## update to jobs db
 		job=jobs.find_one({'id':harmonise_job['id']})
 		job['harmonisation'].update({"harmonised_dates":"finished"})
@@ -255,39 +268,39 @@ def slave():
 
 ## harmonise resources
 	  if 'resources' in harmonise_job.keys():
-		
+
 		print('Harmonising resources')
 		cat_url=harmonise_job['cat_url']
-		
+
 		unharm_formats,message_HarmoniseFormats=HarmonisationEngine.HarmoniseFormats(cat_url)
 		print(unharm_formats)
-		
+
 	##unharmonised formats handling
 		if len(unharm_formats)>0:
-		
+
 		  search_unharmonised_formats=unharmonised_formats.find_one({'cat_url':str(catalogue_url)})
 		  if search_unharmonised_formats==None:
 			search_unharmonised_formats={}
-		  
+
 		  i=0
 		  while i<len(unharm_formats):
 			search_unharmonised_formats.update({str(unharm_formats[i]).replace('.','(dot)'):""})
 			i+=1
-		  
+
 		  search_unharmonised_formats.update({'cat_url':str(catalogue_url)})
 		  unharmonised_formats.save(search_unharmonised_formats)
 
-		message_HarmoniseBadFormats=HarmonisationEngine.HarmoniseBadFormats(cat_url)
-		message_HarmoniseSizes=HarmonisationEngine.HarmoniseSizes(cat_url)
-		message_HarmoniseMimetypes=HarmonisationEngine.HarmoniseMimetypes(cat_url)
+		#message_HarmoniseBadFormats=HarmonisationEngine.HarmoniseBadFormats(cat_url)
+		#message_HarmoniseSizes=HarmonisationEngine.HarmoniseSizes(cat_url)
+		#message_HarmoniseMimetypes=HarmonisationEngine.HarmoniseMimetypes(cat_url)
 		message_HarmoniseNumTagsAndResources=HarmonisationEngine.HarmoniseNumTagsAndResources(cat_url)
-		
+
 	## update to jobs db
 		job=jobs.find_one({'id':harmonise_job['id']})
 		job['harmonisation'].update({"harmonised_resources":"finished"})
-		job['harmonisation'].update({"message_HarmoniseBadFormats":str(message_HarmoniseBadFormats)})
-		job['harmonisation'].update({"message_HarmoniseMimetypes":str(message_HarmoniseMimetypes)})
-		job['harmonisation'].update({"message_HarmoniseSizes":str(message_HarmoniseSizes)})
+		#job['harmonisation'].update({"message_HarmoniseBadFormats":str(message_HarmoniseBadFormats)})
+		#job['harmonisation'].update({"message_HarmoniseMimetypes":str(message_HarmoniseMimetypes)})
+		#job['harmonisation'].update({"message_HarmoniseSizes":str(message_HarmoniseSizes)})
 		job['harmonisation'].update({"message_HarmoniseFormats":str(message_HarmoniseFormats)})
 		job['harmonisation'].update({"message_HarmoniseNumTagsAndResources":str(message_HarmoniseNumTagsAndResources)})
 		job['harmonisation'].update({"harmonised_resources_date":datetime.now()})
@@ -297,28 +310,28 @@ def slave():
 
 ##harmonise licenses
 	  if 'licenses' in harmonise_job.keys():
-		
+
 		print('licenses')
 		cat_url=harmonise_job['cat_url']
-		
+
 		(unharm_licenses,message_HarmoniseLicenses)=HarmonisationEngine.HarmoniseLicenses(cat_url)
 		print(unharm_licenses)
 	##unharmonised licenses handling
 		if len(unharm_licenses)>0:
-		
+
 		  search_unharmonised_licenses=unharmonised_licenses.find_one({'cat_url':str(catalogue_url)})
 		  if search_unharmonised_licenses==None:
 			search_unharmonised_licenses={}
-		  
+
 		  i=0
 		  while i<len(unharm_licenses):
 			search_unharmonised_licenses.update({str(unharm_licenses[i]).replace('.','(dot)'):""})
 			i+=1
-		  
+
 		  search_unharmonised_licenses.update({'cat_url':str(catalogue_url)})
 		  unharmonised_licenses.save(search_unharmonised_licenses)
-		  
-		  
+
+
 	## update to jobs db
 		job=jobs.find_one({'id':harmonise_job['id']})
 		job['harmonisation'].update({"harmonised_licenses":"finished"})
@@ -329,19 +342,22 @@ def slave():
 
 
 ## harmonise languages
-	  if 'languages' in harmonise_job.keys():
-		print('languages')
-		cat_url=harmonise_job['cat_url']
-		message_HarmoniseLanguageLabels=HarmonisationEngine.HarmoniseLanguageLabels(cat_url)
-		message_HarmoniseLanguages=HarmonisationEngine.HarmoniseLanguages(cat_url)
-		
+	  if 'deduplication' in harmonise_job.keys():
+	    print()
+	  ##TO DO: Add Deduplication functions
+
+		#print('languages')
+		#cat_url=harmonise_job['cat_url']
+		#message_HarmoniseLanguageLabels=HarmonisationEngine.HarmoniseLanguageLabels(cat_url)
+		#message_HarmoniseLanguages=HarmonisationEngine.HarmoniseLanguages(cat_url)
+
 	## update to jobs db
-		job=jobs.find_one({'id':harmonise_job['id']})
-		job['harmonisation'].update({"harmonised_languages":"finished"})
-		job['harmonisation'].update({"message_HarmoniseLanguageLabels":str(message_HarmoniseLanguageLabels)})
-		job['harmonisation'].update({"message_HarmoniseLanguages":str(message_HarmoniseLanguages)})
-		job['harmonisation'].update({"harmonised_languages_date":datetime.now()})
-		jobs.save(job)
+		#job=jobs.find_one({'id':harmonise_job['id']})
+		#job['harmonisation'].update({"harmonised_languages":"finished"})
+		#job['harmonisation'].update({"message_HarmoniseLanguageLabels":str(message_HarmoniseLanguageLabels)})
+		#job['harmonisation'].update({"message_HarmoniseLanguages":str(message_HarmoniseLanguages)})
+		#job['harmonisation'].update({"harmonised_languages_date":datetime.now()})
+		#jobs.save(job)
 
 
 
@@ -350,43 +366,65 @@ def slave():
 		print('categories')
 		cat_url=harmonise_job['cat_url']
 		message_HarmoniseCategoryLabels=HarmonisationEngine.HarmoniseCategoryLabels(cat_url)
-		message_HarmoniseCategories=HarmonisationEngine.HarmoniseCategories(cat_url)
-	
+		#message_HarmoniseCategories=HarmonisationEngine.HarmoniseCategories(cat_url)
+		(unharmonised_category_values,message_HarmoniseCategoryValues)=HarmonisationEngine.HarmoniseCategoryValues(cat_url)
+		print(unharmonised_category_values)
+		if len(unharmonised_category_values)>0:
+
+		  search_unharmonised_category_values=unharmonised_category_values_db.find_one({'cat_url':str(catalogue_url)})
+		  if search_unharmonised_category_values==None:
+			search_unharmonised_category_values={}
+
+		  i=0
+		  while i<len(unharmonised_category_values):
+			try:
+				search_unharmonised_category_values.update({str(unharmonised_category_values[i].encode('utf-8')).replace('.','(dot)'):""})
+			except:
+				search_unharmonised_category_values.update({str(unharmonised_category_values[i]).replace('.','(dot)'):""})
+			i+=1
+
+		  search_unharmonised_category_values.update({'cat_url':str(catalogue_url)})
+		  unharmonised_category_values_db.save(search_unharmonised_category_values)
+
 	## update to jobs db
 		job=jobs.find_one({'id':harmonise_job['id']})
 		job['harmonisation'].update({"harmonised_categories":"finished"})
 		job['harmonisation'].update({"message_HarmoniseCategoryLabels":str(message_HarmoniseCategoryLabels)})
-		job['harmonisation'].update({"message_HarmoniseCategories":str(message_HarmoniseCategories)})
+		#job['harmonisation'].update({"message_HarmoniseCategories":str(message_HarmoniseCategories)})
+		job['harmonisation'].update({"message_HarmoniseCategoryValues":str(message_HarmoniseCategoryValues)})
 		job['harmonisation'].update({"harmonised_categories_date":datetime.now()})
 		jobs.save(job)
 
 
 
 ##harmonise countries
-	  if 'countries' in harmonise_job.keys():
-		print('countries')
-		cat_url=harmonise_job['cat_url']
-		unharmonised_category_values=HarmonisationEngine.HarmoniseCountries(cat_url)
-		print(unharmonised_category_values)
-		if len(unharmonised_category_values)>0:
-		
-		  search_unharmonised_category_values=unharmonised_category_values_db.find_one({'cat_url':str(catalogue_url)})
-		  if search_unharmonised_category_values==None:
-			search_unharmonised_category_values={}
-		  
-		  i=0
-		  while i<len(unharmonised_category_values):
-			search_unharmonised_category_values.update({str(unharmonised_category_values[i].encode('utf-8')).replace('.','(dot)'):""})
-			i+=1
-		  
-		  search_unharmonised_category_values.update({'cat_url':str(catalogue_url)})
-		  unharmonised_category_values_db.save(search_unharmonised_category_values)
-		  
+	  #if 'countries' in harmonise_job.keys():
+		#print('countries')
+		#cat_url=harmonise_job['cat_url']
+		#unharmonised_category_values=HarmonisationEngine.HarmoniseCountries(cat_url)
+		#print(unharmonised_category_values)
+		#if len(unharmonised_category_values)>0:
+
+		  #search_unharmonised_category_values=unharmonised_category_values_db.find_one({'cat_url':str(catalogue_url)})
+		  #if search_unharmonised_category_values==None:
+			#search_unharmonised_category_values={}
+
+		  #i=0
+		  #while i<len(unharmonised_category_values):
+			#try:
+				#search_unharmonised_category_values.update({str(unharmonised_category_values[i].encode('utf-8')).replace('.','(dot)'):""})
+			#except:
+				#search_unharmonised_category_values.update({str(unharmonised_category_values[i]).replace('.','(dot)'):""})
+			#i+=1
+
+		  #search_unharmonised_category_values.update({'cat_url':str(catalogue_url)})
+		  #unharmonised_category_values_db.save(search_unharmonised_category_values)
+
 	## update to jobs db
-		job=jobs.find_one({'id':harmonise_job['id']})
-		job['harmonisation'].update({"harmonised_countries":"finished"})
-		job['harmonisation'].update({"harmonised_countries_date":datetime.now()})
-		jobs.save(job)
+		#job=jobs.find_one({'id':harmonise_job['id']})
+		#job['harmonisation'].update({"harmonised_countries":"finished"})
+		#job['harmonisation'].update({"harmonised_countries_date":datetime.now()})
+		#jobs.save(job)
 
 	  job=jobs.find_one({'id':harmonise_job['id']})
 	  job.update({"harmonised":"finished"})
@@ -398,8 +436,8 @@ def slave():
 	  print('harmonisation finished. Waiting for next job...')
 	  ##wait for the next one
 	  time.sleep(3)
-	#except :
-	 # time.sleep(3)
+	except :
+	  break
 
 
 slave()

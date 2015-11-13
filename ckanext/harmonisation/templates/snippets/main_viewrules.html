@@ -38,77 +38,387 @@ action='view_rules') %}
     {% endblock %}
     {% block primary_content_inner %}
     
- {% call form.select('Select Rules Category', id='harmonise_category_selection', label=_('Select Rules Category '), options=[{ "value": "categories_values", "text": "Categories Values" },{ "value": "categories_labels", "text": "Categories Labels" },
-          { "value": "dates", "text": "Dates" },  {'value':'formats', 'text':'File Formats'}, {'value':'licenses', 'text':'Licenses'}], selected=data.harmonise_category_selection, error=errors.harmonise_category_selection) %} 
-           
-        {% endcall %}
-        
-        
-    {% call form.select('catalogue_selection', id='catalogue_selection', label=_('Catalogue'), options=h.harmonisation_sources_rules_list(), selected=data.catalogue_selection, error=errors.catalogue_selection) %} 
+     {% call form.select('Select Rules Category', id='harmonise_category_selection', label=_('Select Rules Category '), 
+        options=[
+            { "value": "categories_values", "text": "Category Values" },
+            { "value": "categories_labels", "text": "Category Labels" },
+            { "value": "dates", "text": "Dates" },  
+            {'value':'formats', 'text':'File Formats'}, 
+            {'value':'licenses', 'text':'Licenses'}], 
+            selected=data.harmonise_category_selection, error=errors.harmonise_category_selection) %} 
+    {% endcall %}
+   
+<div class="control-groups">
+   {% set error = errors.catalogue_selection %}
+   <label class="control-label" for="field-license">{{ _("Catalogue") }}</label>
+   <div class="controls">
+     <select id="catalogue_selection" name="catalogue_selection" data-module="autocomplete">
+        {% for catalogue_id in h.harmonisation_cat_list(['All my catalogues'])|reverse %}
+         <option value="{{ catalogue_id }}" {% if data.get('catalogue_selection', 'notspecified') == catalogue_id %} selected="selected" {% endif %}>{{ catalogue_id }}</option>
+       {% endfor %}
+     </select>
+
+    {# 
+    {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+     <span class="info-block info-inline">
+       <i class="icon-info-sign"></i>
+       {% trans %}
+         License definitions and additional information can be found
+         at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
+       {% endtrans %}
+     </span>
+    #}
+
+   </div>
+ </div>
+
+  {% block form_actions %}
+     <div class="form-actions" style="display:block;">
+         <button class="btn pull-left" value='view-rules' type="submit" name="rules">
+             {#    {% block save_button_text %} #}
+             {{ _('View Mappings') }}
+             {# {% endblock %} #}
+         </button>
+        {% if user in data['usernames'] %}
+            <button class="btn btn-primary pull-left" name="save" value="viewrules-complete" style="margin-left:5px" type="submit"><i class="icon-plus"></i>
+                <span>{{ _('Add New Mappings') }}</span>
+            </button>
+        {% else %}
+            <button class="btn btn-primary pull-left" name="save" value="viewrules-complete" style="margin-left:5px" type="submit" disabled><i class="icon-plus"></i>
+                <span>{{ _('Add New appings') }}</span>
+            </button>
+            <p class="control-required-message">
+                <span class="control-required">*</span> {{ _("Login is required") }}
+            </p>
+        {% endif %}
+     </div>
+     <hr width="100%">
+       <!-- {{ form.required_message() }} -->
+   {% endblock %}      
+
+   {#
+ {% call form.select('catalogue_selection', id='catalogue_selection', label=_('Catalogue'), options=h.harmonisation_sources_rules_list(), selected=data.catalogue_selection, error=errors.catalogue_selection) %} 
             <button class="btn" name="rules" value="view-rules" type="submit" >{{ _('View Mappings') }}</button>
         {% endcall %}
-
+        #}   
 
 	<h3 class="hide-heading">{{ _('Details') }}</h3>
 	
-	
-<table class="table table-striped table-bordered table-condensed">
-  <colgroup>
-    <col width="55">
-    <col width="85">
-  </colgroup>
-  
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="panel-group" id="accordion">
 
-  	{%if data['unharmonised']!=None%}
-	  {%for key in data['unharmonised']%}
-	  
-	  {{ form.custom(
-		names=('unharmonised_key'+'-'+key, 'unharmonised_value'+'-'+key, 'custom_deleted'+'-'+key),
-		id='field-unharmonisedkey'+'-'+key,
-		label=_('Unharmonised'),
-		values=(key, data['unharmonised'][key],deleted),
-		error='')
-		}}
-	  {%endfor%}
-	{% endif %}
-  
-    
-  {{ form.custom(
-     names=('new_key', 'new_value', 'custom_deleted'),
-     id='field-newkey',
-     label=_('New Mapping'),
-     values=(data.newkey, data.newvalue, data.deleted),
-     error='')
-}}
-  
-	{%if data['dictionary']!=None%}
-	  {%for key in data['dictionary']%}
-	
-	  {{ form.custom(
-		names=('new_key'+'-'+key, 'new_value'+'-'+key, 'custom_deleted'+'-'+key),
-		id='field-newkey'+'-'+key,
-		label=_('Mapping'),
-		values=(key, data['dictionary'][key],deleted),
-		error='')
-		}}
-	  {%endfor%}
-	{% endif %}
-	  
-  
+        {%if data['unharmonised']%}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                  Unharmonised
+                </a>
+              </h4>
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse in">
+              <div class="panel-body">
+                <table class="table table-striped table-bordered table-condensed">
+                  <colgroup>
+                    <col width="55">
+                    <col width="85">
+                  </colgroup>
+                        {% if data['Select Rules Category']!='categories_values' %}
+                          {% for key in data['unharmonised']|sort %}                        
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="unharmonised_key"> {{ _('Unharmonised') }}</label>
+                             <div class="controls{{ " " ~ control_classes | join(' ') }}">
+                               <div class="input-prepend" >
+                                   <label for="field-unharmonised-{{key}}" class="add-on">Key</label><input id="field-unharmonised-{{key}}" type="text" name="unharmonised_key" value="{{key}}" />
+                                   <label for="field-unharmonised-{{value}}" class="add-on">Value</label><input id="field-unharmonised-{{value}}" type="text" name="unharmonised_value" value="" />
+                               </div>
+                             </div>
+                           </div>
+                           {#
+                              {{ form.custom(
+                                names=('unharmonised_key', 'unharmonised_value', 'custom_deleted'+'-'+key),
+                                id='field-unharmonisedkey'+'-'+key,
+                                label=_('Unharmonised'),
+                                values=(key, data['unharmonised'][key],deleted),
+                                error='')
+                                }}
+                            #}
+                          {%endfor%}
+                        {% else %}
+                          {% set categories = h.harmonisation_category_groups() %}
+                          {% for key in data['unharmonised']|sort %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="unharmonised_key"> {{ _('Unharmonised') }}</label>
+                             <div class="controls editor">
+                               <div class="input-prepend" >
+                                   <label for="field-unharmonised-{{key}}" class="add-on">Key</label><input id="field-unharmonised-{{key}}" type="text" name="unharmonised_key" value="{{key}}" />
+                                   <label for="dropdown-{{key}}" class="add-on">Value</label>
+                                   <select id="field-unharmonised-dropdown" name="unharmonised_dropdown">
+                                       {% for category in categories %}                               
+                                         <option value="{{ category }}"{% if category == selected %} selected{% endif %}>{{ category }}</option>
+                                       {% endfor %}
+                                   </select>
+                                    <label class="checkbox" for="field-unharmonised-add">
+                                      <input type="checkbox" id="field-unharmonised-add" name="unharmonised_checkbox"/> <span>{{ _('Add') }}</span>
+                                    </label>
+                               </div>
+                             </div>
+                           </div>
+                          {%endfor%}
+                        {% endif %}
+                </table>
+                <!-- <table id="table1" class="table table&#45;bordered"> -->
+                <!-- <thead><tr><th></th><th>Source of Technology</th><th>Tier I<br />(Low altitude, long endurance)</th><th>Tier II<br />(High altitude, long endurance)</th><th>Tier II+<br />(Medium altitude, long endurance)</th></tr></thead> -->
+                <!-- <!&#45;&#45; Israel, UK, US &#45;&#45;> -->
+                <!-- </table> -->
+               </div>
+            </div>
+          </div>
+        {% endif %}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                  Harmonised in Next Run
+                </a>
+              </h4>
+            </div>
+            <div id="collapseTwo" class="panel-collapse collapse">
+              <div class="panel-body">
+                <table class="table table-striped table-bordered table-condensed">
+                  <colgroup>
+                    <col width="55">
+                    <col width="85">
+                  </colgroup>
+                      {% for key in data['next_harmonised']|sort %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="unharmonised_key"> {{ _('To be') }}</label>
+                             <div class="controls{{ " " ~ control_classes | join(' ') }}">
+                               <div class="input-prepend" >
+                                   <label for="field-unharmonised-{{key}}" class="add-on">Key</label><input id="field-unharmonised-{{key}}" type="text" name="unharmonised_key" value="{{key}}" />
+                                   <label for="field-unharmonised-{{value}}" class="add-on">Value</label><input id="field-unharmonised-{{value}}" type="text" name="unharmonised_value" value="{{ data['next_harmonised'][key] }}" />
+                               </div>
+                             </div>
+                           </div>
+                           {# 
+                      {{ form.custom(
+                        names=('next_harmonised_key'+'-'+key, 'next_harmonised_value'+'-'+key, 'custom_deleted'+'-'+key),
+                        id='field-will-harmonisedkey'+'-'+key,
+                        label=_('About'),
+                        values=(key, data['next_harmonised'][key],deleted),
+                        error='')
+                        }}
+                      
+                  {{ form.custom(
+                     names=('new_key', 'new_value', 'custom_deleted'),
+                     id='field-newkey',
+                     label=_('New Mapping'),
+                     values=(data.newkey, data.newvalue, data.deleted),
+                     error='')
+                    }}
+                    #}
+                    {%endfor%}
+                </table>
+                <!-- <table id="table2" class="table table&#45;bordered"> -->
+                <!-- <thead><tr><th></th><th>Source of Technology</th><th>Tier I<br />(Low altitude, long endurance)</th><th>Tier II<br />(High altitude, long endurance)</th><th>Tier II+<br />(Medium altitude, long endurance)</th></tr></thead> -->
+                <!-- <!&#45;&#45; China, France, Iran &#45;&#45;> -->
+                <!-- </table> -->
+               </div>
+            </div>
+          </div>
+        {% if data['Select Rules Category'] in ['categories_labels','dates'] %}
+            {% set custom_dropdown_list = {'categories_labels':['category','subcategory'],'dates':['date_created','date_updated','frequency']} %}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+                    Recommend Mappings 
+                </a>
+              </h4>
+            </div>
+            <div id="collapseThree" class="panel-collapse collapse">
+              <div class="panel-body">
+                <table class="table table-striped table-bordered table-condensed">
+                  <colgroup>
+                    <col width="55">
+                    <col width="85">
+                  </colgroup>
+                    {% block package_metadata_fields_custom %}
+                       {% block custom_fields %}
+                           {% snippet 'snippets/custom_mapping_fields.html', data = data, 
+                               dropdown_list = {'categories_labels':['category','subcategory'],'dates':['date_created','date_updated','frequency']}, 
+                               extras=data.extras, errors=errors, limit=1 %}
+                       {% endblock %}
+                    {% endblock %}
+                </table>
+              </div>
+            </div>
+          </div>
+        {% endif %}
 
-     
-  
-  
-</table>
-    
-   
-
-   
+        {%if data['user_mappings'] or data['dictionary'] %}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+                  Harmonised
+                </a>
+              </h4>
+            </div>
+            <div id="collapseFour" class="panel-collapse collapse">
+              <div class="panel-body">
+            <table class="table table-striped table-bordered table-condensed">
+              <colgroup>
+                <col width="55">
+                <col width="85">
+              </colgroup>
+                {%if data['user_mappings']%}
+                    <h4 class="heading"> User Specific Mappings </h4>
+                    {% set custom_dropdown_list = {'categories_labels':['category','subcategory'],'dates':['date_created','date_updated','frequency']} %}
+                    {% if data['Select Rules Category'] in ['categories_labels','dates'] %}
+                      {% for key in data['user_mappings']|sort %}
+                            {% set prefix = 'harmonised__%d__' % (loop.index0) %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="harmonised_key"> {{ _('Mapping') }}</label>
+                             <div class="controls editor">
+                               <div class="input-prepend" >
+                                   <label for="field-harmonised-{{key}}" class="add-on">Key</label><input id="field-harmonised-{{key}}" type="text" name="{{ prefix }}key" value="{{key}}" />
+                                   <label for="dropdown-{{key}}" class="add-on">Value</label>
+                                   <select id="field-harmonised-dropdown" name="{{ prefix }}value">
+                                       {% for drop_list in custom_dropdown_list[data['Select Rules Category']] %}
+                                           <option value="{{ drop_list }}"{% if drop_list == data['dictionary'][key] %} selected {% endif %}>{{ drop_list }}</option>
+                                       {% endfor %}
+                                   </select>
+                                    <label class="checkbox" for="field-harmonised-update">
+                                        <input type="checkbox" id="field-harmonised-update" name="{{ prefix }}checkbox"/> <span>{{ _('Update') }}</span>
+                                    </label>
+                               </div>
+                             </div>
+                           </div>
+                      {%endfor%}
+                    {% elif data['Select Rules Category']!='categories_values' %}
+                      {% for key in data['user_mappings']|sort %}
+                            {% set prefix = 'harmonised__%d__' % (loop.index0) %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="harmonised_key"> {{ _('Mapping') }}</label>
+                             <div class="controls editor">
+                               <div class="input-prepend" >
+                                   <label for="field-harmonised-{{key}}" class="add-on">Key</label><input id="field-harmonised-{{key}}" type="text" name="{{ prefix }}key" value="{{key}}" />
+                                   <label for="field-harmonised-{{value}}" class="add-on">Value</label><input id="field-harmonised-{{value}}" type="text" name="{{ prefix }}value" value="{{data['dictionary'][key]}}" />
+                                    <label class="checkbox" for="field-harmonised-update">
+                                        <input type="checkbox" id="field-harmonised-update" name="{{ prefix }}checkbox"/> <span>{{ _('Update') }}</span>
+                                    </label>
+                               </div>
+                             </div>
+                           </div>
+                      {%endfor%}
+                    {% else %}
+                      {% for key in data['user_mappings']|sort %}
+                            {% set prefix = 'harmonised__%d__' % (loop.index0) %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="harmonised_key"> {{ _('Mapping') }}</label>
+                             <div class="controls editor">
+                               <div class="input-prepend" >
+                                   <label for="field-harmonised-{{key}}" class="add-on">Key</label><input id="field-harmonised-{{key}}" type="text" name="{{ prefix }}key" value="{{key}}" />
+                                   <!-- <label for="field&#45;unharmonised&#45;{{value}}" class="add&#45;on">Value</label><input id="field&#45;unharmonised&#45;{{value}}" type="text" name="unharmonised_value" value="{{data['dictionary'][key]}}" /> -->
+                                   <label for="dropdown-{{key}}" class="add-on">Value</label>
+                                   <select id="field-harmonised-dropdown" name="{{ prefix }}value">
+                                       {% for category in categories %}
+                                       <option value="{{ category }}"{% if category == data['dictionary'][key] %} selected {% endif %}>{{ category }}</option>
+                                       {% endfor %}
+                                   </select>
+                                    <label class="checkbox" for="field-harmonised-update">
+                                        <input type="checkbox" id="field-harmonised-update" name="{{ prefix }}checkbox"/> <span>{{ _('Update') }}</span>
+                                    </label>
+                               </div>
+                             </div>
+                           </div>
+                      {%endfor%}
+                    {% endif %}
+                {% endif %}
+                {%if data['dictionary']%}
+                    <h4 class="heading"> Global Mappings </h4>
+                    {% set custom_dropdown_list = {'categories_labels':['category','subcategory'],'dates':['date_created','date_updated','frequency']} %}
+                    {% set checkbox_tick = 'off' %}
+                    {% if data['Select Rules Category'] in ['categories_labels','dates'] %}
+                        {% for key in data['dictionary']|sort %}
+                            {% set prefix = 'harmonised__%d__' % (loop.index0) %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="harmonised_key"> {{ _('Mapping') }}</label>
+                             <div class="controls editor">
+                               <div class="input-prepend" >
+                                   <label for="field-harmonised-{{key}}" class="add-on">Key</label><input id="field-harmonised-{{key}}" type="text" name="{{ prefix }}key" value="{{key}}" />
+                                   <label for="dropdown-{{key}}" class="add-on">Value</label>
+                                   <select id="field-harmonised-dropdown" name="{{ prefix }}value">
+                                       {% for drop_list in custom_dropdown_list[data['Select Rules Category']] %}
+                                           <option value="{{ drop_list }}"{% if drop_list == data['dictionary'][key] %} selected {% endif %}>{{ drop_list }}</option>
+                                       {% endfor %}
+                                   </select>
+                                    <label class="checkbox" for="field-harmonised-update">
+                                        <input type="checkbox" id="field-harmonised-update" name="{{ prefix }}checkbox"/> <span>{{ _('Update') }}</span>
+                                    </label>
+                               </div>
+                             </div>
+                           </div>
+                      {%endfor%}
+                    {% elif data['Select Rules Category']!='categories_values' %}
+                      {% for key in data['dictionary']|sort %}
+                            {% set prefix = 'harmonised__%d__' % (loop.index0) %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="harmonised_key"> {{ _('Mapping') }}</label>
+                             <div class="controls editor">
+                               <div class="input-prepend" >
+                                   <label for="field-harmonised-{{key}}" class="add-on">Key</label><input id="field-harmonised-{{key}}" type="text" name="harmonised_key" value="{{key}}" />
+                                   <label for="field-harmonised-{{value}}" class="add-on">Value</label><input id="field-harmonised-{{value}}" type="text" name="harmonised_value" value="{{data['dictionary'][key]}}" />
+                                    <label class="checkbox" for="field-harmonised-update">
+                                        <input type="hidden" value="off" name="harmonised_checkbox" />
+                                      <input type="checkbox" id="field-harmonised-update" name="harmonised_checkbox"/> <span>{{ _('Update') }}</span>
+                                    </label>
+                               </div>
+                             </div>
+                           </div>
+                      {%endfor%}
+                    {% else %}
+                      {% for key in data['dictionary']|sort %}
+                            {% set prefix = 'harmonised__%d__' % (loop.index0) %}
+                           <div class="control-group control-custom">
+                               <label class="control-label" for="harmonised_key"> {{ _('Mapping') }}</label>
+                             <div class="controls editor">
+                               <div class="input-prepend" >
+                                   <label for="field-harmonised-{{key}}" class="add-on">Key</label><input id="field-harmonised-{{key}}" type="text" name="harmonised_key" value="{{key}}" />
+                                   <label for="dropdown-{{key}}" class="add-on">Value</label>
+                                   <select id="field-harmonised-dropdown" name="harmonised_value">
+                                       {% for category in categories %}
+                                       <option value="{{ category }}"{% if category == data['dictionary'][key] %} selected {% endif %}>{{ category }}</option>
+                                       {% endfor %}
+                                   </select>
+                                    <label class="checkbox" for="field-harmonised-update">
+                                    <!-- <input type="hidden" value="off" name="harmonised_checkbox" /> -->
+                                    <input type="checkbox" id="field-harmonised-update" name="harmonised_checkbox"/> 
+                                      <span>{{ _('Update') }}</span>
+                                    </label>
+                               </div>
+                             </div>
+                           </div>
+                      {%endfor%}
+                    {% endif %}
+                {% endif %}
+            </table>
+                <!-- <table id="table3" class="table table&#45;bordered"> -->
+                <!-- <thead><tr><th></th><th>Source of Technology</th><th>Tier I<br />(Low altitude, long endurance)</th><th>Tier II<br />(High altitude, long endurance)</th><th>Tier II+<br />(Medium altitude, long endurance)</th></tr></thead> -->
+                <!--     -->
+                <!-- </table> -->
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
    {% endblock %}
   </article>
 {% endblock %}
-
-
 
 
   {% block stages %}
@@ -119,22 +429,5 @@ action='view_rules') %}
   {% endblock %}
 
   {{ form.errors(error_summary) }}
-
-  
-
-
-
-{%if user=='admin' or  user=='provider'%}
-
-  <div class="form-actions">
-    
-      <button class="btn btn-primary" name="save" value="viewrules-complete" type="submit">{{ _('Add Mapping') }}</button>
-      
-  </div>
-{% endif %}
-
-
-
-
 
 </form>

@@ -42,5 +42,5 @@ category_groups = {
 "2a":["Business; Economy, finance and tax", "Business"],
 "2b":["Business; Economy, finance and tax", "Economy"],
 "1e":["Agriculture, fisheries and food; Energy and natural resources", "Energy"],
-"15c":["Transport and travel", "Infrastructure"],
+"15c":["Transport and travel", "Infrastructure"]
 }

@@ -1,0 +1,874 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9" />
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+      on iOS devices-->
+    <meta name="viewport" content="width=device-width, maximum-scale=0.9,user-scalable=no"/>
+    <title>rMaps</title>
+   <link rel="stylesheet" type="text/css" href="../../js/dojo/1.6.1/dijit/themes/claro/claro.css">
+	<link rel="stylesheet" type="text/css" href="../../js/dojo/1.6.1/dojox/layout/resources/ExpandoPaneRIMS.css">
+	<link rel="stylesheet" type="text/css" href="../../js/dojo/1.6.1/dojox/grid/resources/Grid.css">
+	<link rel="stylesheet" type="text/css" href="../../js/dojo/1.6.1/dojox/grid/resources/claroGrid.css">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
+	<link rel="icon" href="ICON.ico" type="image/x-icon" /> 
+	<link rel="shortcut icon" href="ICON.ico" type="image/x-icon" />
+	<style type="text/css">
+	  .aboutIcon { background-image:url(graphics/TB_ABOUT.png); width:33px; height:33px; }
+	  .printIcon { background-image:url(graphics/TB_PDFPRINT.png); width:33px; height:33px; }
+	  .helpIcon { background-image:url(graphics/TB_HELP.png); width:33px; height:33px; }
+	  .contactIcon { background-image:url(graphics/TB_CONTACTUS.png); width:33px; height:33px; }
+	  .zoominIcon { background-image:url(graphics/TB_ZOOMIN.png); width:33px; height:33px; }
+	  .zoomoutIcon { background-image:url(graphics/TB_ZOOMOUT.png); width:33px; height:33px; }
+	  .panIcon { background-image:url(graphics/TB_PAN.png); width:32px; height:32px; }
+	  .fullextentIcon { background-image:url(graphics/TB_FULLEXTENT.png); width:33px; height:33px; }
+	  .maplayerIcon { background-image:url(graphics/TB_MAPLAYER.png); width:33px; height:33px; }
+	  .identifyIcon { background-image:url(graphics/TB_IDMAPLAYER.png); width:43px; height:33px; }
+	  .identPlanningMenuIcon { background-image:url(graphics/TB_IDPLANNING.png); width:43px; height:33px; }
+	  .drawIcon { background-image:url(graphics/TB_DRAW.png); width:33px; height:33px; }
+	  .xyIcon { background-image:url(graphics/TB_XY.png); width:33px; height:33px; }
+	  .clearmapIcon { background-image:url(graphics/TB_CLEARMAP.png); width:33px; height:33px; }
+	  .measureIcon { background-image:url(graphics/TB_MEASURE.png); width:33px; height:33px; }
+	  .basemapIcon { background-image:url(graphics/TB_BASEMAP.png); width:33px; height:33px; }
+	  .streetviewIcon { background-image:url(graphics/TB_STREETVIEW.png); width:33px; height:33px; }
+	  .aboutIconActive { background-image:url(graphics/TB_ABOUT.png); width:33px; height:33px; }
+	  .printIconActive { background-image:url(graphics/TB_PDFPRINT.png); width:33px; height:33px; }
+	  .helpIconActive { background-image:url(graphics/TB_HELP.png); width:33px; height:33px; }
+	  .contactIconActive { background-image:url(graphics/TB_CONTACTUS.png); width:33px; height:33px; }
+	  .zoominIconActive { background-image:url(graphics/TB_ZOOMINACTIVE.png); width:33px; height:33px; }
+	  .zoomoutIconActive { background-image:url(graphics/TB_ZOOMOUTACTIVE.png); width:33px; height:33px; }
+	  .panIconActive { background-image:url(graphics/TB_PANACTIVE.png); width:32px; height:32px; }
+	  .fullextentIconActive { background-image:url(graphics/TB_FULLEXTENT.png); width:33px; height:33px; }
+	  .maplayerIconActive { background-image:url(graphics/TB_MAPLAYER.png); width:33px; height:33px; }
+	  .identifyIconActive { background-image:url(graphics/TB_IDMAPLAYERACTIVE.png); width:43px; height:33px; }
+	  .identPlanningMenuIconActive { background-image:url(graphics/TB_IDPLANNINGACTIVE.png); width:43px; height:33px; }
+	  .drawIconActive { background-image:url(graphics/TB_DRAWACTIVE.png); width:33px; height:33px; }
+	  .xyIconActive { background-image:url(graphics/TB_XYACTIVE.png); width:33px; height:33px; }
+	  .clearmapIconActive { background-image:url(graphics/TB_CLEARMAP.png); width:33px; height:33px; }
+	  .measureIconActive { background-image:url(graphics/TB_MEASUREACTIVE.png); width:33px; height:33px; }
+	  .streetviewIconActive { background-image:url(graphics/TB_STREETVIEWACTIVE.png); width:33px; height:33px; }
+	  .ui-autocomplete {
+    max-height: 300px;
+	max-width: 500px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+	font-size: 9pt;
+  }
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 300px;
+	font-size: 10pt;
+  }
+	</style>
+    <script type="text/javascript">var djConfig = {parseOnLoad: false};</script>
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.4"></script>
+	<script type="text/javascript" src="../../Map2PDF/MapPrinter.js"></script>
+	<script type="text/javascript" src="js/script.js"></script>
+	<script type="text/javascript" src="js/addresses.js"></script>
+	<script type="text/javascript" src="js/sortMyTable.js"></script>
+	<script type="text/javascript" src="js/jscoord-1.1.3.js"></script>
+	<script src="http://maps.googleapis.com/maps/api/js?v=3.7&sensor=false" type="text/javascript"></script>
+  </head>
+  
+  <body class="claro">
+  <div id="sitecontent" style="width:100%; height:100%;">
+  <div id="loader" align="center"><img src="graphics/loader.gif"/></div>
+  <div dojoType="dijit.Dialog" id="firefoxmessage" title="Message for Mozilla Firefox Browser Users">
+	<div dojoType="dijit.layout.ContentPane" style="width:300px; text-align: center;">
+	We have detected you are using Mozilla Firefox. Unfortunately the following tools are currently not working in this browser:
+	<br /><br />
+	Identify Planning<br /><br />
+	Measure<br /><br />
+	Draw<br /><br />
+	Whilst we troubleshoot this problem please use a different browser (i.e Internet Explorer, Google Chrome or Safari) if you require one of the above tools.
+	<br /><br /><button dojoType="dijit.form.Button" onclick="dijit.byId('firefoxmessage').hide()">OK</button>
+	</div>
+	</div>
+    <div dojoType="dijit.Dialog" id="disclaimerdialog" title="Accept or Decline Site Agreement Terms" execute="alert('submitted w/args:\n' + dojo.toJson(arguments[0], true));">
+            <div dojoType="dijit.layout.ContentPane" style="width:500px; border:1px solid #b7b7b7; background:#fff; padding:8px; margin:0; height:200px; overflow:auto; text-align: center;">
+                <p><b>Terms of Use:</b><p>
+				<p><b><u>Disclaimer</u></b></p>
+				<p>Runnymede Borough Council provides this service for indicative purposes only and whilst every effort has been made to ensure the accuracy of the data presented through this site is current and up to date, the Council cannot be held responsible for the misuse or misinterpretation of any information and offers no warranty to its accuracy or completeness. The Council accepts no liability for any loss, damage or inconvenience caused as a result of reliance on this information.</p>
+				<p><b><u>Use of Ordnance Survey Mapping</u></b></p>
+				<p>You are granted a non-exclusive, royalty free, revocable licence to view the Licensed Data for non-commercial purposes for the period during which Runnymede Borough Council makes it available. You are not permitted to copy, sub-license, distribute, sell or otherwise make available the Licensed Data to third parties in any form; and Third party rights to enforce the terms of this licence shall be reserved to Ordnance Survey.</p>
+				<p><b><u>Use of National Land and Property Gazetteer Datasets</u></b></p>
+				<p>Set out below are the terms and conditions which, together with any legal notices displayed elsewhere on this Website, represent all the terms and conditions on which we will provide you with access to the datasets created by Local Government Information House Limited (the “National Datasets”) and/or the datasets compiled and maintained by Runnymede Borough Council (the “Authority Datasets”) associated with the use of the National Land and Property Gazetteer and the National Street Gazetteer. 
+Your continued use of this Website indicates your acceptance to be bound by these terms and conditions. If you do not agree to be bound by these terms and conditions, please cease using this Website. 
+
+The terms and conditions for this licence agreement are as follows: 
+
+1. The National and/or Authority datasets are associated with the use of the National Land and Property Gazetteer and the National Street Gazetteer. Information displayed throughout the Website is extracted from a copyright work owned by the Local Government Information House Limited and Runnymede Borough Council. 
+
+2. A single screen print of the results of a search of the National and/or Authority datasets is permitted for your own use. 
+
+3. You may not extract or re-utilise information derived from the National and/or Authority Datasets and/or any copies of such information (whether electronic or in hard copy format) for any commercial or business purpose including but not limited to, trading, building commercial databases, reselling or redistribution of such information. 
+
+4. You are not permitted to modify, adapt, arrange, alter, adjust or make any additions to any information derived from the National and/or Authority Datasets, nor are you permitted to combine such information with other mapping, data or other information, including for the avoidance of doubt, other such information derived from this Website. 
+
+5. Save as permitted by paragraph 2 above, the reproduction, copying, downloading, storage, recording, broadcasting, retransmission, distribution, decompilation, reverse-engineering or disassembly of any part of this Website is not permitted without our prior written consent. 
+
+6. It is your responsibility to ensure that any information derived from the National and/or Authority Datasets is not made available, either in electronic unencrypted form or in hard copy format, to any third party that may attempt to use the map in contravention of these terms and conditions. 
+
+7. You must inform us immediately if you become aware of a third party using information derived from the National and/or Authority Datasets in contravention of these terms and conditions or of any infringement of trade marks located on the Website. 
+
+8. We shall have no liability to any person or organisation in respect of any loss or damage arising directly or indirectly from the use of the information contained on this Website. 
+
+9. We take every reasonable effort to ensure that information contained on this Website is as accurate as possible. However, the services featured on this Website are provided “as is”, and all warranties, conditions and other terms implied by statute or common law are, to the fullest extent permitted by law, excluded. We shall not be liable to you for any indirect or consequential loss (whether for loss of profit, loss of business, depletion of goodwill or otherwise), costs, expense or other claims for consequential compensation whatsoever (howsoever caused) which arise out of or in connection with your use of the Website.
+</p>
+            </div>
+            <br>
+            <table>
+                <tr>
+                    <td>
+                        <input type="radio" dojoType="dijit.form.RadioButton" name="agreement"
+                        id="radioOne" value="accept" onclick="accept();" />
+                        <label for="radioOne">
+                            I accept the terms of this agreement
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" dojoType="dijit.form.RadioButton" name="agreement"
+                        id="radioTwo" value="decline" onclick="decline();" />
+                        <label for="radioTwo">
+                            I decline
+                        </label>
+                    </td>
+                </tr>
+            </table>
+    </div>
+    <div dojoType="dijit.layout.BorderContainer" design="headline" gutters="false" style="width: 100%; height: 100%; margin: 0;">
+	  <div dojoType="dijit.Dialog" id="aboutdialog" title="About rMaps" execute="alert('submitted w/args:\n' + dojo.toJson(arguments[0], true));">
+            <div dojoType="dijit.layout.ContentPane" style="width:500px; border:1px solid #b7b7b7; background:#fff; padding:8px; margin:0; height:200px; overflow:auto; ">
+                <p>rMaps is Runnymede Borough Council's interactive GIS (Geographical Information System) map, it allows users to navigate around the Borough and view
+				various map layers such as Local Plan Policies and Points of Interest, as well as utilising other features like measuring and drawing tools, PDF map exporting and viewing Google Street View images.</p>  
+				<p><img src="graphics/DOJO_LOGO.png"></img><br/>rMaps uses The Dojo Toolkit, an open source modular JavaScript
+					library designed to ease the rapid development of cross-platform, JavaScript/Ajax based applications and websites.</p>
+				<p><img src="graphics/ESRI_LOGO.png"></img><br/>rMaps uses ESRI ArcGIS technology, a suite of products designed to
+					capture, publish and view spatial data.</p>
+            </div>
+	  </div>	
+	  <div dojoType="dijit.Dialog" id="contactdialog" title="Contact Us" execute="alert('submitted w/args:\n' + dojo.toJson(arguments[0], true));">
+            <div dojoType="dijit.layout.ContentPane" style="width:400px; border:1px solid #b7b7b7; background:#fff; padding:8px; margin:0; height:100px; overflow:auto; ">
+                <p>Having problems? Want to give some feedback? We would be more than happy to hear from you!</p>  
+				<p>You can contact us via email:- <a href="mailto:gis@runnymede.gov.uk?subject=My Comments/Feedback using rMaps">gis@runnymede.gov.uk</a></p>
+            </div>
+      </div>
+	  <div dojoType="dijit.Dialog" id="measurearearesult" title="Measure Results" execute="alert('submitted w/args:\n' + dojo.toJson(arguments[0], true));">
+	  <div dojoType="dijit.layout.ContentPane" style="width:400px; border:1px solid #b7b7b7; background:#fff; padding:8px; margin:0; height:100px; overflow:auto; ">
+	  Approx. Area: <span id="areametres"></span> (<span id="areafeet"></span></br>
+	  Approx. Perimeter: <span id="lengthmetres"></span> (<span id="lengthfeet"></span>
+	  </div>
+	  </div>
+	  <div dojoType="dijit.Dialog" id="measurelineresult" title="Measure Results" execute="alert('submitted w/args:\n' + dojo.toJson(arguments[0], true));">
+	  <div dojoType="dijit.layout.ContentPane" style="width:400px; border:1px solid #b7b7b7; background:#fff; padding:8px; margin:0; height:100px; overflow:auto; ">
+	  Approx. Distance: <span id="distancemetres"></span> (<span id="distancefeet"></span>
+	  </div>
+	  </div>
+		<div dojoType="dijit.layout.ContentPane" region="top" style="height: 100px; background-color: #D7E7FE; border-bottom: 1px solid #D6D6D6;"><div dojoType="dijit.Toolbar" align="center" style="width: 100%; border: 1px solid #77C1EA;">
+			<table id="topbartable" style="width: 100%;">
+				<tr valign="middle">
+					<td align="left">
+						<img src="graphics/RMAPS_SITE.PNG"></img>
+					</td>
+					<td align="right">
+					
+						<button id="zoomto" label="Zoom To Location" dojoType="dijit.form.DropDownButton">
+						<div dojoType="dijit.Menu">
+						<div dojoType="dijit.MenuItem" onClick="zoomAddlestone();">Addlestone</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomChertsey();">Chertsey</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomEgham();">Egham</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomEghamHythe();">Egham Hythe</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomEnglefieldGreen();">Englefield Green</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomLyne();">Lyne</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomNewHaw();">New Haw</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomOttershaw();">Ottershaw</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomRowTown();">Row Town</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomThorpe();">Thorpe</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomVirginiaWater();">Virginia Water</div>
+						<div dojoType="dijit.MenuItem" onClick="zoomWoodham();">Woodham</div>
+						</div>
+						</button>
+						
+						&nbsp; &nbsp; &nbsp; Address Search:
+
+						<input type="text" id="searchllpg"  style="font-size: 9pt; color: #969696; width: 300px;" value="Please enter part of your address..." onfocus="this.style.color='black'; this.value=''"/>
+
+						&nbsp; &nbsp; &nbsp; Planning Application Search:
+
+						<input type="text" style="width: 6em; font-size: 9pt; color: #969696;" id="planningbox" value="RU.11/0001" onfocus="this.value=''; this.style.color='black'" onkeydown="if (event.keyCode == 13) {doFind(); showLoading(); togsearchbox(); tb.deactivate(); navToolbar.deactivate()}"/><a href="#" onclick="doFind(); showLoading(); togsearchbox(); tb.deactivate(); navToolbar.deactivate()"><img style="vertical-align: top;" src="graphics/SEARCH.png"/></a>
+
+						
+					</td>
+				</tr>
+
+                                              <tr>
+												  <td align="left">
+												      <div dojoType="dijit.form.Button" id="about" iconClass="aboutIcon" onClick="makeIconActive(this); showAbout(); turnidTool(0);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="about" showDelay="0" label="About" position="below"></div>
+													  <div dojoType="dijit.form.Button" id="help" iconClass="helpIcon" onClick="javascript:window.open('userguide.pdf')"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="help" showDelay="0" label="Help" position="below"></div>
+													  <div dojoType="dijit.form.Button" id="contactus" iconClass="contactIcon" onClick="makeIconActive(this); showContactUs(); turnidTool(0);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="contactus" showDelay="0" label="Contact Us" position="below"></div>
+													  <div dojoType="dijit.form.DropDownButton" id="print" iconClass="printIcon" onClick="setPrintArea();"><span></span>
+													  <div dojoType="dijit.TooltipDialog">
+														<table class="pdf"> 
+															<tr>  
+															<td>1. Position your map inside the exportable area</td>
+															</tr>
+															<tr>  
+															<td>2. Add a Map Title: <input id="reportTitle" type="text" name="pageTitle" value="" size="30"/></td>
+															</tr>
+															<tr>
+															<td><button id="printButton"></button><button id="cancelButton"></button>
+															</td> 
+															</tr> 
+														</table> 
+													  </div>
+													  </div>
+                                                  </td>
+                                                  <td align="right">
+													  <div dojoType="dijit.form.Button" id="zoomin" iconClass="zoominIcon" onClick="makeIconActive(this); tb.deactivate(); navToolbar.activate(esri.toolbars.Navigation.ZOOM_IN); turnidTool(0);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="zoomin" showDelay="0" label="Zoom In" position="below"></div>
+													  <div dojoType="dijit.form.Button" id="zoomout" iconClass="zoomoutIcon" onClick="makeIconActive(this); tb.deactivate(); navToolbar.activate(esri.toolbars.Navigation.ZOOM_OUT); turnidTool(0);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="zoomout" showDelay="0" label="Zoom Out" position="below"></div>
+													  <div dojoType="dijit.form.Button" id="pan" iconClass="panIcon" onClick="makeIconActive(this); tb.deactivate(); navToolbar.deactivate(); turnidTool(0);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="pan" showDelay="0" label="Pan" position="below"></div>
+													  <div dojoType="dijit.form.Button" id="fullextent" iconClass="fullextentIcon" onClick="makeIconActive(this); tb.deactivate(); navToolbar.deactivate(); map.setExtent(initExtent); turnidTool(0);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="fullextent" showDelay="0" label="Full Extent" position="below"></div>
+													  <div dojoType="dijit.form.Button" id="addmaplayer" iconClass="maplayerIcon" onClick="makeIconActive(this); showmenu(); tb.deactivate(); navToolbar.deactivate(); dijit.byId('stackcontainer').selectChild('maplayers'); turnidTool(0); map.setExtent(map.extent);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="addmaplayer" showDelay="0" label="Add a Map Layer" position="below"></div>
+                                                      <div dojoType="dijit.form.Button" id="identify" iconClass="identifyIcon" onClick="makeIconActive(this); tb.deactivate(); navToolbar.deactivate(); turnidTool(1);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="identify" showDelay="0" label="Identify Map Feature" position="below"></div>
+													  <div dojoType="dijit.form.DropDownButton" id="identPlanningMenu" iconClass="identPlanningMenuIcon" onclick="hidePlanningTooltip()"><span></span><div dojotype="dijit.Menu">
+													  <div dojoType="dijit.Tooltip" id="identifyTooltip" connectId="identPlanningMenu" showDelay="0" label="Identify Planning" position="below"></div>
+													  <div dojoType="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(identPlanningMenu);} tb.deactivate(); navToolbar.deactivate(); turnidTool(5); map.setExtent(map.extent);">By Point</div>
+													  <div dojoType="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(identPlanningMenu);} navToolbar.deactivate(); tb.activate(esri.toolbars.Draw.POLYGON); turnidTool(10); map.setExtent(map.extent);">By Area</div>
+												      </div></div>
+													  <div dojoType="dijit.form.DropDownButton" id="measure" iconClass="measureIcon"><span>Measure</span><div dojotype="dijit.Menu">
+													  <div dojotype="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(measure);} navToolbar.deactivate(); tb.activate(esri.toolbars.Draw.POLYGON); turnidTool(4); map.setExtent(map.extent);">Area</div>
+													  <div dojotype="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(measure);} navToolbar.deactivate(); tb.activate(esri.toolbars.Draw.POLYLINE); turnidTool(6); map.setExtent(map.extent);">Distance</div>
+													  </div></div>
+													  <div dojoType="dijit.form.DropDownButton" id="draw" iconClass="drawIcon"><span>Draw</span><div dojotype="dijit.Menu">
+													  <div dojotype="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(draw);} navToolbar.deactivate(); tb.activate(esri.toolbars.Draw.POINT); turnidTool(8); map.setExtent(map.extent);">A Point</div>
+												      <div dojotype="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(draw);} navToolbar.deactivate(); tb.activate(esri.toolbars.Draw.POLYGON); turnidTool(2); map.setExtent(map.extent);">An Area</div>
+													  <div dojotype="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(draw);} navToolbar.deactivate(); tb.activate(esri.toolbars.Draw.POLYLINE); turnidTool(9); map.setExtent(map.extent);">A Line</div>
+													  <div dojotype="dijit.MenuItem" onClick="makeIconActive(this); tb.deactivate(); navToolbar.deactivate(); map.graphics.clear(); turnidTool(0);">Clear Graphics</div>
+													  </div></div>
+													  <div dojoType="dijit.form.DropDownButton" id="xy" iconClass="xyIcon"><span></span><div dojotype="dijit.Menu">
+													  <div dojoType="dijit.MenuItem" onClick="if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)){makeIconActive(this);}else{makeIconActive(xy);} tb.deactivate(); navToolbar.deactivate(); turnidTool(3);">Get Map Coordinates</div>
+													  <div dojoType="dijit.MenuItem" onClick="dijit.byId('xyzoomer').show();">Zoom To Coordinates</div>
+													  <div dojoType="dijit.Dialog" id="xyzoomer" title="Coordinate Zoom Tool">
+													  <label>X (Easting):</label>&nbsp;&nbsp;<input dojoType="dijit.form.NumberTextBox" style="width: 5em;" id="xvalue" maxLength="6" constraints="{pattern:'#.############',fractional:[true,false]}">&nbsp;&nbsp;<label>Y (Northing):</label>&nbsp;&nbsp;<input dojoType="dijit.form.NumberTextBox" style="width: 5em;" id="yvalue" maxLength="6" constraints="{pattern:'#.############',fractional:[true,false]}">&nbsp;&nbsp;<button dojoType="dijit.form.Button" onClick="zoomer();">Zoom</button>
+													  </div>
+													  </div></div>
+													  <div dojoType="dijit.form.Button" id="streetview" iconClass="streetviewIcon" onClick="makeIconActive(this); navToolbar.deactivate(); tb.deactivate(); turnidTool(7);"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="streetview" showDelay="0" label="Google Street View" position="below"></div>
+													  <div dojoType="dijit.form.Button" id="clearmap" iconClass="clearmapIcon" onClick="makeIconActive(this); tb.deactivate(); navToolbar.deactivate(); map.graphics.clear(); turnidTool(0); closestreetview(); deselectPrintArea(); showmenu(); map.infoWindow.hide();"></div>
+                                                      <div dojoType="dijit.Tooltip" connectId="clearmap" showDelay="0" label="Clear" position="below"></div>
+												  </td>
+											 </tr>
+                </table>  
+			
+		</div></div>
+			<div dojoType="dojox.layout.ExpandoPane" region="left" title="Main Menu" style="width: 300px; background-color: #EFEFEF;" id="menuexpando" splitter="false" easeIn="dojo.fx.easing.quadIn" easeOut="dojo.fx.easing.quadOut" duration="10">
+				<div dojoType="dijit.layout.ContentPane" class="menulinks" style="font-style: italic;">
+				Quick Links: <a href="#" onclick="javascript:dijit.byId('stackcontainer').selectChild('welcomepage');">Home</a> | <a href="#" onclick="javascript:dijit.byId('stackcontainer').selectChild('maplayers'); map.setExtent(map.extent);">Add a Map Layer</a>
+				</div>
+				<div dojoType="dijit.layout.StackContainer" id="stackcontainer" style="position: absolute; bottom: 3px; top: 60px; width: 295px; background-color: white; border: 1px solid #d6d6d6;">
+					<div dojoType="dijit.layout.ContentPane" id="welcomepage" class="menulinks" title="Welcome">
+					<p><a href="http://www.runnymede.gov.uk" target="_blank"><img src="graphics/RMLOGO1.PNG"/></a></p>
+					<p style="font-size: 12pt; font-weight: bold;">Welcome to rMaps...</p>
+					<br />
+					<p>
+					<table>
+					<tr><th rowspan=2><img src="graphics/TB_HELP.png"/></th><td><div>First Time User?</div></td></tr>
+					<tr><td><div><a target="_blank" href="userguide.pdf">View our user guide</a></div></td></tr>
+					</table>
+					</p>
+					<p>
+					<table>
+					<tr><th rowspan=2><img src="graphics/TB_MAPLAYER.png"/></th><td><div>Want to view information about Runnymede?</div></td></tr>
+					<tr><td><div><a href="#" onclick="javascript:dijit.byId('stackcontainer').selectChild('maplayers'); map.setExtent(map.extent);">Add a map layer</a></div></td></tr>
+					</table>
+					</p>
+					<p>
+					<table>
+					<tr><th rowspan=2><img src="graphics/TB_NEW.png"/></th><td><div>A new way to search for addresses</div></td></tr>
+					<tr><td><div><a target="_blank" href="addresssearch.html">Type and choose</a></div></td></tr>
+					</table>
+					</p>
+					<br />
+					<p>
+					rMaps News...<br /><br />
+					<img src="graphics/ML_ICON.png"/>  (07/10/2014) Address search changed - Start typing and just select your address<br />
+					<img src="graphics/ML_ICON.png"/>  (02/10/2014) New layer added - Article 4 Directions (Environment & Planning - Other Layers)<br />
+					<img src="graphics/ML_ICON.png"/>  (04/03/2014) New layer added - Special Protection Area Sites (Environment & Planning - Other Layers)<br />
+					<img src="graphics/ML_ICON.png"/>  (04/03/2014) New layer added - Relevant Sites to the South West London Waterbodies Special Protection Area (Environment & Planning - Other Layers)</p>
+					<br />
+					<p>
+					rMaps Essentials...<br /><br />
+					<img src="graphics/ML_ICON.png"/>  Searching - You can search for property addresses or planning applications using the tools at the top of the page.<br /><br />
+					<img src="graphics/ML_ICON.png"/>  The navBar - Need to navigate? Measure? Add a Map Layer? All of these and more features can be accessed by clicking on the icons at the top of the page. 
+					</p>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" id="maplayers" class="maplayers" title="Add a Map Layer">
+					<p style="font-size: 12pt; font-weight: bold;">Map Layers</p>
+					<p style="font-style: italic; font-size: 8pt;"><a href="javascript:turnOffLayers();">Clear All</a><p>
+					<p><a href="#" onclick="return toggleMe('topten');"><img src="graphics/ML_ICON.png"/>  <b>Most Viewed Layers</b></a></p>
+				   <div id="topten" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='68' name="featurelayer" value=68 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_GREENBELT2.png"></img></td><td><label>Green Belt (Local Plan Saved Policy GB1)</label></td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='48' name="featurelayer" value=48 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_TPO2.png"></img></td><td><label>Tree Preservation Orders</label></td>
+				   </tr>
+				   <tr>
+				   <td><span class="dropt"><input type='checkbox' class='list_item' id='65' name="featurelayer" value=65 onclick='updateLayerVisibility();'/><span style="width:150px;">Please note the Flood Zones are only intended for guidance at town / village level, they are not accurate at individual property level</span></span></td><td><img src="graphics/ML_FL3A2.png"></img></td><td>Flood Zone 3a (EA August 2015 Release)</td>
+				   </tr>
+				   <tr>
+				   <td><span class="dropt"><input type='checkbox' class='list_item' id='66' name="featurelayer" value=66 onclick='updateLayerVisibility();'/><span style="width:150px;">Please note the Flood Zones are only intended for guidance at town / village level, they are not accurate at individual property level</span></span></td><td><img src="graphics/ML_FL22.png"></img></td><td>Flood Zone 2 (EA August 2015 Release)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='29' name="featurelayer" value=29 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_WARD2.png"></img></td><td><label>Ward Boundaries</label></td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='33' name="featurelayer" value=33 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_CONAREA2.png"></img></td><td><label>Conservation Area (Local Plan Saved Policy BE4-7 & BE19)</label></td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='31' name="featurelayer" value=31 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SPA5KM2.png"></img></td><td><label>Special Protection Area 5km Buffer Zone<label></td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='49' name="featurelayer" value=49 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NATLISTED2.png"></img></td><td><label>Nationally Listed Buildings</label></td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='51' name="featurelayer" value=51 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_LOCLISTED2.png"></img></td><td><label>Locally Listed Buildings</label></td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='72' name="featurelayer" value=72 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DOWNARROW2.png"></img></td><td><label>Council Owned Land</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_AF2.png"></img></td><td><label>Absolute Freehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_AL2.png"></img></td><td><label>Absolute Leasehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_GL2.png"></img></td><td><label>Good Leasehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PF2.png"></img></td><td><label>Possessory Freehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_D2.png"></img></td><td><label>DIYSO</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_C2.png"></img></td><td><label>Caution</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_JI2.png"></img></td><td><label>Joint Interests</label></td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('buslayer');"><img src="graphics/ML_ICON.png"/>  Business</a></p>
+				   <div id="buslayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='80' name="featurelayer" value=80 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DOWNARROW2.png"></img></td><td><label>Licensed Premises</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_DBLUE2.png"></img></td><td><label>Gambling Premises</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_BLUE2.png"></img></td><td><label>Hotels, B+Bs and Restaurants</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_GRAY2.png"></img></td><td><label>Others</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_BGREEN2.png"></img></td><td><label>Private Hire Operators</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_GREEN2.png"></img></td><td><label>Pubs, Clubs and Bars</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_DPURPLE2.png"></img></td><td><label>Registered Member Clubs</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_PURPLE2.png"></img></td><td><label>Sports Clubs</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_RED2.png"></img></td><td><label>Supermarkets, Shops and Off Licenses</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_TURQUOISE2.png"></img></td><td><label>Takeaways</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_BRED2.png"></img></td><td><label>Taxi Ranks</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PL_YELLOW2.png"></img></td><td><label>Village and Community Halls</label></td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('comlivelayer');"><img src="graphics/ML_ICON.png"/>  Community & Living</a></p>
+				   <div id="comlivelayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='82' name="featurelayer" value=82 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_CCTV2.png"></img></td><td>CCTV Cameras</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='3' name="featurelayer" value=3 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_CEMETERY2.png"></img></td><td>Cemeteries</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='5' name="featurelayer" value=5 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_COMMUNITYCENTRE2.png"></img></td><td>Community Centres</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='127' name="featurelayer" value=127 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DPPO.png"></img></td><td>Designated Public Places Orders</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='7' name="featurelayer" value=7 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_ELDERLYDAYCENTRE2.png"></img></td><td>Elderly Day Centres</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='84' name="featurelayer" value=84 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NOTICEBOARD2.png"></img></td><td>Noticeboards</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='8' name="featurelayer" value=8 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_FIRESTATION2.png"></img></td><td>Fire Stations</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='21' name="featurelayer" value=21 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_POLICESTATION2.png"></img></td><td>Police Stations</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='83' name="featurelayer" value=83 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_POW2.png"></img></td><td>Places of Worship</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='89' name="featurelayer" value=89 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_TOILETS2.png"></img></td><td>Public Conveniences</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='23' name="featurelayer" value=23 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_YOUTHCENTRE2.png"></img></td><td>Youth Centres</td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('coundemlayer');"><img src="graphics/ML_ICON.png"/>  Council & Democracy</a></p>
+				   <div id="coundemlayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='24' name="featurelayer" value=24 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BOROUGHBOUNDARY2.png"></img></td><td>Borough Boundary</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='29' name="featurelayer" value=29 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_WARD2.png"></img></td><td>Ward Boundaries</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='115' name="featurelayer" value=115 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_ELECDIV.png"></img></td><td>Electoral Divisions</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='28' name="featurelayer" value=28 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_POLDIS2.png"></img></td><td>Polling Districts</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='26' name="featurelayer" value=26 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_POLSTA2.png"></img></td><td>Polling Stations</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='4' name="featurelayer" value=4 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_CIVICOFFICES2.png"></img></td><td>Civic Centre</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='72' name="featurelayer" value=72 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DOWNARROW2.png"></img></td><td><label>Council Owned Land</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_AF2.png"></img></td><td><label>Absolute Freehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_AL2.png"></img></td><td><label>Absolute Leasehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_GL2.png"></img></td><td><label>Good Leasehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_PF2.png"></img></td><td><label>Possessory Freehold</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_D2.png"></img></td><td><label>DIYSO</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_C2.png"></img></td><td><label>Caution</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_JI2.png"></img></td><td><label>Joint Interests</label></td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('edulealayer');"><img src="graphics/ML_ICON.png"/>  Education & Learning</a></p>
+				   <div id="edulealayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='12' name="featurelayer" value=12 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SCHOOL2.png"></img></td><td>Infant, Junior & Primary Schools</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='13' name="featurelayer" value=13 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NURSERY2.png"></img></td><td>Nursery Schools</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='14' name="featurelayer" value=14 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_PRIVATESCHOOL2.png"></img></td><td>Private Schools</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='15' name="featurelayer" value=15 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SECONDARYSCHOOL2.png"></img></td><td>Secondary Schools</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='16' name="featurelayer" value=16 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SPECIALSCHOOL2.png"></img></td><td>Special Schools</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='17' name="featurelayer" value=17 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_FURTHEREDUCATION.png"></img></td><td>Further Education</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='112' name="featurelayer" value=112 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_UNIVERSITY2.png"></img></td><td>Higher Education</td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('envplanlayer');"><img src="graphics/ML_ICON.png"/>  Environment & Planning</a></p>
+				   <div id="envplanlayer" style="display: none;">
+				   <p>&nbsp;&nbsp;&nbsp;<a href="#" onclick="return toggleMe('localplantable');"><img src="graphics/ML_ICON_DOWN.png"/>  Local Plan 2001 Saved Policies</a><table cellspacing="5" id="localplantable" style="display:none;">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='58' name="featurelayer" value=58 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_TC482.png"></img></td><td>Addlestone Revitalisation Area (TC4 to TC8)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='41' name="featurelayer" value=41 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NE82.png"></img></td><td>Area of Landscape Importance (NE8)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='33' name="featurelayer" value=33 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_CONAREA2.png"></img></td><td>Conservation Areas (BE4-7 and BE19)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='63' name="featurelayer" value=63 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SV22.png"></img></td><td>General Flooding Policy (SV2)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='68' name="featurelayer" value=68 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_GREENBELT2.png"></img></td><td>Green Belt (GB1)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='59' name="featurelayer" value=59 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_HO62.png"></img></td><td>Housing Sites (HO6 & HO7)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='34' name="featurelayer" value=34 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_GB102.png"></img></td><td>Major Developed Sites in the Green Belt (GB10)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='44' name="featurelayer" value=44 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NE72.png"></img></td><td>Mineral Sites (NE7)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='42' name="featurelayer" value=42 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_HO92.png"></img></td><td>New Housing Development (HO9)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='39' name="featurelayer" value=39 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_PASS2.png"></img></td><td>Policy Areas for Specific Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='60' name="featurelayer" value=60 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_GB62.png"></img></td><td>Riverside Dwellings (GB6)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='61' name="featurelayer" value=61 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BE242.png"></img></td><td>River Bourne Floodplain (BE24)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='62' name="featurelayer" value=62 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SHO232.png"></img></td><td>Shopping Core Areas in Town Centres (SHO2 and SHO3)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='43' name="featurelayer" value=43 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NE162.png"></img></td><td>SSSIs (NE16)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='45' name="featurelayer" value=45 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SWPS2.png"></img></td><td>Surrey Waste Plan Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='52' name="featurelayer" value=52 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_GB22.png"></img></td><td>Thorpe Settlement (GB2)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='46' name="featurelayer" value=46 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_TC12.png"></img></td><td>Town Centre Strategies (TC1)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='47' name="featurelayer" value=47 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_TC22.png"></img></td><td>Town Centres outside Revitalisation Areas (TC2)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='53' name="featurelayer" value=53 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SHO42.png"></img></td><td>Town Centres outside Shopping Core Areas (SHO4)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='67' name="featurelayer" value=67 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BE221.png"></img></td><td>Urban Area (BE2)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='38' name="featurelayer" value=38 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BE222.png"></img></td><td>Aircraft Noise (BE22)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='54' name="featurelayer" value=54 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BE142.png"></img></td><td>Ancient Monuments and Archaeological Interest (BE14)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='32' name="featurelayer" value=32 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BE182.png"></img></td><td>Control of Advertisements Area (BE18)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='55' name="featurelayer" value=55 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BE152.png"></img></td><td>High Archaeological Potential (BE15) & Preservation and Recording of Archaeological Remains (BE16)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='40' name="featurelayer" value=40 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BE82.png"></img></td><td>Historic Parks and Gardens (BE8)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='35' name="featurelayer" value=35 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NE102.png"></img></td><td>Landscape Problem Area (NE10)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='50' name="featurelayer" value=50 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_LOCLISTED2.png"></img></td><td>Local Architectural or Historic Interest (BE13)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='56' name="featurelayer" value=56 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NE122.png"></img></td><td>Ancient Woodland (NE12) *Updated*</td>
+				   </tr>
+				   </table>
+				   </p>
+				   <p>&nbsp;&nbsp;&nbsp;<a href="#" onclick="return toggleMe('flooddatatable');"><img src="graphics/ML_ICON_DOWN.png"/>  Flood Data (Environment Agency)</a><table cellspacing="5" id="flooddatatable" style="display:none;">
+				   <tr>
+				   <td><span class="dropt"><input type='checkbox' class='list_item' id='65' name="featurelayer" value=65 onclick='updateLayerVisibility();'/><span style="width:150px;">Please note the Flood Zones are only intended for guidance at town / village level, they are not accurate at individual property level</span></span></td><td><img src="graphics/ML_FL3A2.png"></img></td><td>Flood Zone 3a (EA August 2015 Release)</td>
+				   </tr>
+				   <tr>
+				   <td><span class="dropt"><input type='checkbox' class='list_item' id='66' name="featurelayer" value=66 onclick='updateLayerVisibility();'/><span style="width:150px;">Please note the Flood Zones are only intended for guidance at town / village level, they are not accurate at individual property level</span></span></td><td><img src="graphics/ML_FL22.png"></img></td><td>Flood Zone 2 (EA August 2015 Release)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='116' name="featurelayer" value=116 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_FLDIVERSION.png"></img></td><td>Flood Diversion (Channel 2) Outline</td>
+				   </tr>
+				   </table>
+				   </p>
+				   <p>&nbsp;&nbsp;&nbsp;<a href="#" onclick="return toggleMe('otherlayerstable');"><img src="graphics/ML_ICON_DOWN.png"/>  Other Layers</a><table cellspacing="5" id="otherlayerstable" style="display:none;">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='132' name="featurelayer" value=132 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_A4.png"></img></td><td>Article 4 Directions</td>
+				   </tr>
+				   <tr>
+				   <td><span class="dropt"><input type='checkbox' class='list_item' id='134' name="featurelayer" value=134 onclick='updateLayerVisibility();'/><span style="width:150px;">Please note this information is as published in the Arup review. It does not represent Council policy or intent at this stage.</span></span></td><td><img src="graphics/ML_GBGA.png"></img></td><td>Arup Green Belt Review 2014 - General Areas</td>
+				   </tr>
+				    <tr>
+				   <td><span class="dropt"><input type='checkbox' class='list_item' id='135' name="featurelayer" value=135 onclick='updateLayerVisibility();'/><span style="width:150px;">Please note this information is as published in the Arup review. It does not represent Council policy or intent at this stage.</span></span></td><td><img src="graphics/ML_GBRLP.png"></img></td><td>Arup Green Belt Review 2014 - Resultant Land Parcels</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='90' name="featurelayer" value=90 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SHLAA2.png"></img></td><td>SHLAA Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='118' name="featurelayer" value=118 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SANGS.png"></img></td><td>SANGS Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='128' name="featurelayer" value=128 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SPA.png"></img></td><td>Special Protection Area Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='129' name="featurelayer" value=129 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SPAR.png"></img></td><td>Relevant Sites to the South West London Waterbodies Special Protection Area</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='125' name="featurelayer" value=125 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SWS.png"></img></td><td>Safeguarded Waste Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='124' name="featurelayer" value=124 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SMS.png"></img></td><td>Safeguarded Mineral Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='123' name="featurelayer" value=123 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_MSA.png"></img></td><td>Mineral Safeguarding Areas</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='122' name="featurelayer" value=122 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_PA.png"></img></td><td>Preferred Areas</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='31' name="featurelayer" value=31 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SPA5KM2.png"></img></td><td>Thames Basin Heaths SPA 5km Buffer Zone</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='48' name="featurelayer" value=48 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_TPO2.png"></img></td><td>Tree Preservation Orders</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='30' name="featurelayer" value=30 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SPA400M2.png"></img></td><td>400m SPA Boundary</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='49' name="featurelayer" value=49 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_NATLISTED2.png"></img></td><td>Nationally Listed Buildings</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='51' name="featurelayer" value=51 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_LOCLISTED2.png"></img></td><td>Locally Listed Buildings</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='37' name="featurelayer" value=37 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_AQMA.png"></img></td><td>Air Quality Management Areas</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='57' name="featurelayer" value=57 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_SNCI2.png"></img></td><td>Local SNCIs (Sites of Nature Conservation Importance)</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='27' name="featurelayer" value=27 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_MAST2.png"></img></td><td>Telecommunication Masts</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='87' name="featurelayer" value=87 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BANNER2.png"></img></td><td>Designated Pedestrian Guardrail Banner Sites</td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('heasoclayer');"><img src="graphics/ML_ICON.png"/>  Health & Social Care</a></p>
+				   <div id="heasoclayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='0' name="featurelayer" value=0 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_AMBULANCE2.png"></img></td><td>Ambulance Stations</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='6' name="featurelayer" value=6 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DENTIST2.png"></img></td><td>Dentists</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='10' name="featurelayer" value=10 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_HEALTH2.png"></img></td><td>Health Sites</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='11' name="featurelayer" value=11 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_HOSPITAL2.png"></img></td><td>Hospitals</td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('leicullayer');"><img src="graphics/ML_ICON.png"/>  Leisure & Culture</a></p>
+				   <div id="leicullayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='88' name="featurelayer" value=88 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DOWNARROW2.png"></img></td><td><label>Open Spaces</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_A.png"></img></td><td><label>Allotments, Community Gardens and City (Urban) Farms</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_AGS.png"></img></td><td><label>Amenity Green Spaces</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_CC.png"></img></td><td><label>Cemeteries and Churchyards</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_CS.png"></img></td><td><label>Civic Spaces</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_GC.png"></img></td><td><label>Green Corridors</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_N.png"></img></td><td><label>Natural and Semi-natural Urban Green Spaces</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_O.png"></img></td><td><label>Other</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_OSF.png"></img></td><td><label>Outdoor Sports Facilities</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_P.png"></img></td><td><label>Parks and Gardens</label></td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_OS_PG.png"></img></td><td><label>Provision for Children and Teenagers</label></td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='36' name="featurelayer" value=36 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_ALLOTMENTS.png"></img></td><td>Allotments</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='9' name="featurelayer" value=9 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_GOLFCLUB2.png"></img></td><td>Golf Clubs</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='18' name="featurelayer" value=18 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_LEISURECENTRE2.png"></img></td><td>Leisure Centres</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='126' name="featurelayer" value=126 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_ROLLERSKATE.png"></img></td><td>Skate Parks</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='19' name="featurelayer" value=19 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_LIBRARY2.png"></img></td><td>Libraries</td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('refreclayer');"><img src="graphics/ML_ICON.png"/>  Refuse & Recycling</a></p>
+				   <div id="refreclayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='25' name="featurelayer" value=25 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_RECYCLE2.png"></img></td><td>Recycling Facilities</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='69' name="featurelayer" value=69 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_LITTER2.png"></img></td><td>Litter Bins</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='70' name="featurelayer" value=70 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DOG2.png"></img></td><td>Dog Bins</td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+				   <p><a href="#" onclick="return toggleMe('trastrlayer');"><img src="graphics/ML_ICON.png"/>  Transport & Streets</a></p>
+				   <div id="trastrlayer" style="display: none;">
+				   <p><table cellspacing="5">
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='1' name="featurelayer" value=1 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_BUS2.png"></img></td><td>Bus Stops</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='2' name="featurelayer" value=2 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_PARKING2.png"></img></td><td>Car Parks</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='102' name="featurelayer" value=102 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_DOWNARROW2.png"></img></td><td>Cycle Routes</td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_CYCLEON1.png"></img></td><td>Routes on busier roads (signposted)</td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_CYCLEON2.png"></img></td><td>Routes on quieter roads and shared cycle / footways</td>
+				   </tr>
+				   <tr>
+				   <td></td><td><img src="graphics/ML_CYCLEOFF.png"></img></td><td>Off road routes</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='20' name="featurelayer" value=20 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_PETROLSTATION2.png"></img></td><td>Petrol Stations</td>
+				   </tr>
+				   <tr>
+				   <td><input type='checkbox' class='list_item' id='22' name="featurelayer" value=22 onclick='updateLayerVisibility();'/></td><td><img src="graphics/ML_RAILWAYSTATION2.png"></img></td><td>Railway Stations</td>
+				   </tr>
+				   </table>
+				   </p>
+				   </div>
+					</div>
+				</div>	
+			</div>
+				<div id="mapcontainer" style="margin: 0; padding: 1px 0 0 0; overflow:hidden;" dojoType="dijit.layout.ContentPane" region="center">
+				<div id="map" style="position:absolute; top:0px; left:0px; width:100%; height:100%; border: 1px solid #d6d6d6;">
+				<div id="selectedAddress" style="font-size: 9pt; position: absolute; left:50px; top:10px; z-Index:99;">
+				</div>
+				<div id="labelsButton" style="position:absolute; right:160px; top:10px; z-Index:99; display: none;">
+					<button label="Toggle Labels"  onClick="alert('This feature is currently unavailable');" dojoType="dijit.form.Button">
+					</button>
+				</div>
+				<div style="position:absolute; right:10px; top:10px; z-Index:99;">
+					<button id="dropdownButton" label="Switch Basemap"  dojoType="dijit.form.DropDownButton" onclick="document.getElementById('aerialbutton').style.display = 'none';">
+					<div dojoType="dijit.Menu">
+					<div dojoType="dijit.MenuItem" onClick="javascript:basemapGallery.select('road'); showLabels();">Road</div>
+					<div dojoType="dijit.PopupMenuItem"><span>Aerial</span><div dojoType="dijit.Menu">
+					<div dojoType="dijit.MenuItem" onClick="javascript:basemapGallery.select('aerial13'); showLabels();">2013 Aerial</div>
+					</div></div>
+					</div>
+					</button>
+				</div>
+				<div id="aerialbutton" style="position:absolute; right:2px; top:50px; z-Index:99;" onclick="dijit.byId('dropdownButton').openDropDown(); showLabels(); document.getElementById('aerialbutton').style.display = 'none';">
+					<img src="graphics/aerialbutton.PNG"/>
+				</div>
+				<img id="loadingImg" src="graphics/LOADING.png" style="position:absolute; top: 45%; left: 40%; z-index:100;" />
+				<div id="copyright" style="position: absolute; bottom: 5px; right: 5px; z-index: 998; font-size: 8pt; color: black; text-align: right;">
+				<a href="#" onclick="showTerms();">Use of this data is subject to terms and conditions</a><br />Imagery © Getmapping plc 2014<br />Flood Data © Environment Agency and database rights 2014<br />OS Data © Crown copyright and database rights 2015 Ordnance Survey 100006086
+				</div>
+				</div>
+				</div>
+			<div dojoType="dojox.layout.ExpandoPane" region="right" id="streetviewexpando" title="Google Street View" startExpanded="false" style="width: 600px;" splitter="false" easeIn="dojo.fx.easing.quadIn" easeOut="dojo.fx.easing.quadOut" duration="10">
+			<div id="streetviewpane" style="height: 100%; width: 800px;">
+			</div>
+			</div>
+			<div dojoType="dojox.layout.ExpandoPane" region="bottom" id="searchbox" title="Planning Results" startExpanded="false" style="height: 250px;" splitter="false" easeIn="dojo.fx.easing.quadIn" easeOut="dojo.fx.easing.quadOut" duration="10">
+				<div dojoType="dijit.layout.ContentPane" id="searchplanning" style="height:250px;">
+					<table dojoType="dojox.grid.DataGrid" data-dojo-id="grid"  id="grid" data-dojo-props="rowsPerPage:'4', rowSelector:'20px'">
+						<thead>
+							<tr>
+								<th field="APPLICATION_NUMBER" width="15%">Application Number</th>
+								<th field="SITE_ADDRESS" width="40%">Address</th>
+								<th field="APP_TYPE_DESC" width="20%">Application Type</th>
+								<th field="LOV_DESC" width="25%">Application Decision</th>
+							</tr>
+						</thead>
+					</table>
+				</div>	
+				</div>
+    </div>
+  </div>
+  </body>
+
+</html>

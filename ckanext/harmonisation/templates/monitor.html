@@ -1,0 +1,17 @@
+{% extends "sources/monitor_form_page1.html" %}
+
+{% block subtitle %}{{ _('Monitor') }}{% endblock %}
+
+{% block form %}{% snippet 'snippets/main_monitor.html', data=data, errors=errors,user=user, 
+    error_summary=error_summary, include_metadata=false, pkg_name=pkg_name, stage=stage, 
+    allow_upload=g.ofs_impl and logged_in %}
+{% endblock %}
+
+
+
+{% block primary_content %}
+  {% if pkg_dict and pkg_dict.state != 'draft' %}
+    <header class="module-content page-header"></header>
+  {% endif %}
+  {{ super() }}
+{% endblock %}
