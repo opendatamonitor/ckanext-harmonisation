@@ -39,9 +39,10 @@ Using
 After setting this up, you should be able to go to:
     http://localhost:5000/harmonisation
 
-In order to run a harmonisation job you need to add a cron job that will execute the command:
+In order to run  harmonisation jobs automatically you need to add a cron job that will execute the command:
 
     python /var/local/ckan/default/pyenv/src/ckanext-harmonisation/ckanext/harmonisation/controllers/harmonisation_slave.py 
+
 
 Licence
 ---------
