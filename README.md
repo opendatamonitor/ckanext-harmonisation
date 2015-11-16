@@ -9,12 +9,12 @@ General
 --------
 The ckanext-harmonisation plugin harmonises metadata labels and values that comply with the ODM metadata scheme.
 The plugin uses the mongo DB as metadata repository and developed as part of the ODM project (www.opendatamonitor.eu).
-In order to use it you need to have the metadata (ODM scheme) stored to a collection named odm_harmonised and the raw metadata in a collection named odm.
+In order to use it, the collected metadata, raw and harmonised, need to be stored in collections with names as #odm_harmonised# and #odm# respectively.
 
 Implementation
 ---------------
 
-The extension gives the ability to an end user to harmonise specific metadata fields (Dates,Resources,Licenses,Categories) via a web form. It also provides the ability to add new mappings. 
+The extension gives the ability to an end user to harmonise specific metadata fields (Dates,Resources,Licenses,Categories) via a web form. It also provides the ability to add new mappings or update existing ones. 
 
 Building
 ---------
@@ -37,9 +37,9 @@ Using
 After setting this up, you should be able to go to:
     http://localhost:5000/harmonisation
 
-In order to run  harmonisation jobs automatically you need to add a cron job that will execute the command:
+In order to execute the scheduled harmonisation jobs you need to execute the harmonisation_slave.py. This script can be found in the ckanext-harmonisation plugin under #controllers# folder. For instance, if you have installed the CKAN under the /var/local/ckan/default/pyenv virtualenv folder, you can add the following cron job to run it automatically:
 
-    python /var/local/ckan/default/pyenv/src/ckanext-harmonisation/ckanext/harmonisation/controllers/harmonisation_slave.py 
+    30 * * * * *    /usr/bin/flock -n /tmp/slave.lockfile /var/local/ckan/default/pyenv/bin/python /var/local/ckan/default/pyenv/src/ckanext-harmonisation/ckanext/harmonisation/controllers/harmonisation_slave.py > /tmp/cronslave.log 2>&1
 
 
 Licence
