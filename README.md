@@ -2,6 +2,7 @@ ckanext-harmonisation
 ======================
 
 A tool for harmonising metadata labels and values.
+
 Tested with CKAN v2.2 (http://docs.ckan.org/en/ckan-2.2/).
 
 General
