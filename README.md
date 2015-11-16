@@ -14,7 +14,7 @@ In order to use it you need to have the metadata (ODM scheme) stored to a collec
 Implementation
 ---------------
 
-The extension gives the ability to an ending user to harmonise specific metadata fields (Dates,Resources,Licenses,Categories) threw a web form. It also gives the ability to add new mappings. 
+The extension gives the ability to an ending user to harmonise specific metadata fields (Dates,Resources,Licenses,Categories) threw a web form. It also provides the ability to add new mappings. 
 
 Building
 ---------
