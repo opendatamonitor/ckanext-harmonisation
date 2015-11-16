@@ -9,7 +9,7 @@ General
 --------
 The ckanext-harmonisation plugin harmonises metadata labels and values that comply with the ODM metadata scheme.
 The plugin uses the mongo DB as metadata repository and developed as part of the ODM project (www.opendatamonitor.eu).
-In order to use it, the collected metadata, raw and harmonised, need to be stored in collections with names as *odm_harmonised* and #odm# respectively.
+In order to use it, the collected metadata, raw and harmonised, need to be stored in collections with names as -odm_harmonised- and #odm# respectively.
 
 Implementation
 ---------------
