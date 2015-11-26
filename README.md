@@ -19,6 +19,8 @@ The extension gives the ability to an end user to harmonise specific metadata fi
 Building
 ---------
 
+In order to use this extension you need to have MongoDB installed.
+
 To build and use this plugin, simply:
 
     git clone https://github.com/opendatamonitor/ckanext-harmonisation.git
